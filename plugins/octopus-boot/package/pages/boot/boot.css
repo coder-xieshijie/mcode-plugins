@@ -1,0 +1,66 @@
+/* 宿主的开机画面层是透明的：html 不画底色，body 淡出时直接透出主界面。 */
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+}
+html {
+  background: transparent;
+}
+body {
+  background: #05070d;
+  transition: opacity var(--fade-ms, 800ms) ease;
+}
+body.leaving {
+  opacity: 0;
+}
+#stage,
+#poster,
+#clip {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+#poster,
+#clip {
+  object-fit: cover;
+}
+#clip {
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+#clip.playing {
+  opacity: 1;
+}
+#progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+#progress.hidden {
+  display: none;
+}
+#bar {
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #3a7bff, #7fd8ff);
+  box-shadow: 0 0 8px rgba(127, 216, 255, 0.6);
+  transition: width 400ms ease;
+}
+#hint {
+  position: absolute;
+  right: 20px;
+  bottom: 14px;
+  margin: 0;
+  font: 12px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}

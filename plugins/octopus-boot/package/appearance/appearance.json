@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "pages": [
+    {
+      "slot": "boot",
+      "entry": "pages/boot/index.html",
+      "label": "章鱼少女开机动画"
+    }
+  ],
+  "wallpapers": [
+    {
+      "id": "circuit",
+      "label": "电路线稿",
+      "description": "开机动画首帧：电路线稿亮起，深色背景。",
+      "image": "wallpapers/circuit.webp",
+      "defaults": {
+        "blur": 6,
+        "dim": 35,
+        "readingSurfaceOpacity": 86
+      }
+    },
+    {
+      "id": "code-wake",
+      "label": "代码唤醒",
+      "description": "代码流环绕、闭眼将醒的一帧。",
+      "image": "wallpapers/code-wake.webp",
+      "defaults": {
+        "blur": 8,
+        "dim": 40,
+        "readingSurfaceOpacity": 88
+      }
+    },
+    {
+      "id": "smile",
+      "label": "睁眼微笑",
+      "description": "开机动画尾帧：睁眼微笑，深蓝底。",
+      "image": "wallpapers/smile.webp",
+      "defaults": {
+        "blur": 10,
+        "dim": 30,
+        "readingSurfaceOpacity": 88
+      }
+    }
+  ],
+  "settings": [
+    {
+      "key": "sound",
+      "label": "播放声音",
+      "description": "开机时播放视频原声；关闭后静音播放。",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "key": "ending",
+      "label": "结束方式",
+      "description": "两种方式都会溶解进主界面，区别是什么时候开始溶解。",
+      "type": "select",
+      "options": [
+        {
+          "value": "dissolve",
+          "label": "片尾溶解进界面"
+        },
+        {
+          "value": "after",
+          "label": "放完再淡出"
+        }
+      ],
+      "default": "dissolve"
+    },
+    {
+      "key": "fade-ms",
+      "label": "溶解时长（毫秒）",
+      "type": "number",
+      "min": 200,
+      "max": 3000,
+      "default": 800
+    },
+    {
+      "key": "click-to-skip",
+      "label": "点击画面跳过",
+      "description": "MCode 还没准备好时，点击后会等它准备好再进入。Esc 任何时候都能跳过。",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "key": "show-progress",
+      "label": "显示启动进度条",
+      "type": "boolean",
+      "default": true
+    }
+  ]
+}
