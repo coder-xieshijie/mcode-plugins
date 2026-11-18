@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "name": "dsh-skin-import",
+  "displayName": "DSH 皮肤转换器",
+  "version": "0.1.0",
+  "description": "把 DeepSeek Harness（DSH）的皮肤类插件静态转换成 MCode 外观插件：主题配色、字体、壁纸和开机动画，附拆解报告与许可检查。",
+  "author": "coder-xieshijie",
+  "icon": "icon.png",
+  "category": "Design & Sites",
+  "exampleQueries": [
+    "把 DSH 插件 dsh-dream-skin 转成 MCode 主题",
+    "把这个 DSH 皮肤 https://github.com/owner/dsh-skin 转成 MCode 外观"
+  ],
+  "apps": [],
+  "mcpServers": [],
+  "skills": [
+    "skills/dsh-skin-import/SKILL.md"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "boot": {
+    "file": "assets/boot.mp4",
+    "fadeMs": 1200,
+    "sound": false
+  },
+  "background": {
+    "file": "assets/background.mp4",
+    "veil": 0.2,
+    "surface": 0.7
+  }
+}
