@@ -130,8 +130,9 @@
   });
   document.addEventListener('click', function () {
     if (settings['click-to-skip'] === false) return;
-    // 没准备好时 MCode 会等到准备好再进入
-    host.dismiss().catch(function () {});
+    // 跳过也走溶解：准备好了就立刻淡出；没准备好就等就绪后淡出（Esc 由 MCode 处理）
+    finished = true;
+    maybeLeave();
   });
 
   // 直接用浏览器打开本文件预览时没有 MCode 宿主：模拟 5 秒的启动进度，结束后重播。

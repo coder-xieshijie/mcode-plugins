@@ -41,7 +41,10 @@ test('CSS palette cards become named themes; host and glass blocks are ignored; 
   const d = decl(r);
   const moss = d.themes.find((t) => t.id === 'card-style-moss');
   assert.equal(moss.modes.light.colors.bg_default_primary, '#f6faf5');
-  assert.equal(moss.modes.light.colors.bg_default_tertiary, '#eeeeee');
+  // The card's tertiary (#eeeeee, inherited from the main palette) is pushed away from the page so
+  // code blocks keep an edge.
+  assert.equal(moss.modes.light.colors.bg_default_tertiary, '#e7e7e7');
+  assert.ok(r.themes.find((t) => t.id === 'card-style-moss').adjustments.some((a) => a.reason === 'code block surface distinct from page'));
   assert.equal(d.fonts.length, 2);
 });
 

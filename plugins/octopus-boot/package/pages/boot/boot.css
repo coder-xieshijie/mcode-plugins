@@ -1,18 +1,19 @@
-/* 宿主的开机画面层是透明的：html 不画底色，body 淡出时直接透出主界面。 */
+/*
+ * MCode 的开机画面层没有底色。html 和 body 都必须透明：body 的背景会被浏览器传播到整个
+ * 画布，而画布不随 body 的 opacity 变化，淡出时会停在这层底色上再硬切主界面。
+ * 深色底放在 #stage 上，和视频一起随 body 淡出，页面就直接溶解进主界面。
+ */
 html,
 body {
   margin: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background: transparent;
   cursor: default;
   user-select: none;
 }
-html {
-  background: transparent;
-}
 body {
-  background: #05070d;
   transition: opacity var(--fade-ms, 800ms) ease;
 }
 body.leaving {
@@ -25,6 +26,9 @@ body.leaving {
   inset: 0;
   width: 100%;
   height: 100%;
+}
+#stage {
+  background: #05070d;
 }
 #poster,
 #clip {

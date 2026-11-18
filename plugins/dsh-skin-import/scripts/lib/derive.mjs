@@ -1,7 +1,7 @@
 // Derive a complete MCode theme mode (47 colour tokens, 9 code tokens, backdrop) from a small
 // seed palette, then enforce text contrast. Explicit tokens (direct mappings) win over derived
 // ones; every contrast fix is reported so converters and the preset build can show it.
-import { asColor, composite, contrast, ensureContrast, isLight, mix, toHex, withAlpha } from './color.mjs';
+import { asColor, composite, contrast, ensureContrast, isLight, mix, oklabToRgb, rgbToOklab, toHex, withAlpha } from './color.mjs';
 
 export const COLOR_TOKENS = [
   'bg_default_primary', 'bg_default_primary_elevated', 'bg_default_secondary', 'bg_default_secondary_elevated',
@@ -28,6 +28,34 @@ export const READING_SURFACES = [
 ];
 
 const hex = (c) => toHex(asColor(c));
+
+/**
+ * Code blocks (and inline code) sit on bg_grouped_tertiary over the page background. MCode draws
+ * them with no other fill, so they need a visible step from bg_default_primary. Measured as OKLab
+ * distance; thresholds come from checking the preset themes in a running instance (dark 0.06–0.08
+ * read as "no edge"; 0.1 leaves a clear step).
+ */
+export const CODE_SURFACE_MIN_DELTA = { light: 0.045, dark: 0.1 };
+export const CODE_SURFACE_TOKENS = ['bg_grouped_tertiary', 'bg_default_tertiary'];
+
+export function oklabDistance(a, b) {
+  const x = rgbToOklab(asColor(a));
+  const y = rgbToOklab(asColor(b));
+  return Math.hypot(x.L - y.L, x.a - y.a, x.b - y.b);
+}
+
+/** Move a surface's OKLab lightness away from the page until it is at least min apart. */
+export function separateFrom(surface, page, min, mode) {
+  const s = asColor(surface);
+  if (oklabDistance(s, page) >= min) return s;
+  const lab = rgbToOklab(s);
+  const dir = mode === 'light' ? -1 : 1;
+  for (let step = 1; step <= 60; step++) {
+    const c = oklabToRgb({ ...lab, L: lab.L + dir * step * 0.004, alpha: 1 });
+    if (oklabDistance(c, page) >= min) return c;
+  }
+  return oklabToRgb({ ...lab, L: lab.L + dir * 0.24, alpha: 1 });
+}
 
 /** Opaque colour a surface token shows over the canvas (or over black/white for a translucent canvas). */
 export function surfaceOn(colors, token, mode) {
@@ -121,6 +149,17 @@ export function deriveMode(seed, mode, explicit = {}) {
     }
   }
 
+  // Code block surface must stand apart from the page.
+  const page = surfaceOn(colors, 'bg_default_primary', mode);
+  for (const token of CODE_SURFACE_TOKENS) {
+    const before = colors[token];
+    const after = hex(separateFrom(surfaceOn(colors, token, mode), page, CODE_SURFACE_MIN_DELTA[mode] + 0.005, mode));
+    if (after !== hex(surfaceOn(colors, token, mode))) {
+      adjustments.push({ token, from: before, to: after, reason: 'code block surface distinct from page' });
+      colors[token] = after;
+    }
+  }
+
   const fix = (token, backgrounds, target, reason) => {
     const before = colors[token];
     const after = hex(ensureContrast(before, backgrounds, target + 0.05));
@@ -201,6 +240,7 @@ export function contrastReport(modeDef, mode) {
     accent: worst(colors.text_default_accent, reading),
     inverted: worst(colors.text_default_inverted, [['bg_interaction_primary_default', surfaceOn(colors, 'bg_interaction_primary_default', mode)]]),
     code: modeDef.code ? worst(modeDef.code.default, [['bg_default_primary', surfaceOn(colors, 'bg_default_primary', mode)]]) : null,
+    codeSurface: { ratio: oklabDistance(surfaceOn(colors, 'bg_grouped_tertiary', mode), surfaceOn(colors, 'bg_default_primary', mode)), surface: 'bg_grouped_tertiary' },
   };
 }
 

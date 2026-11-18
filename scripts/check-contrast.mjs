@@ -3,9 +3,11 @@
 // Body text (text_default_primary) must reach 4.5:1 on every background token; secondary and
 // accent text 4.5:1 and tertiary text 3:1 on reading surfaces; text on the primary action 4.5:1;
 // code text 4.5:1 on the main background. Translucent surfaces are composited over the canvas.
+// The code block surface (bg_grouped_tertiary) must differ from the page (bg_default_primary) by an
+// OKLab distance of at least 0.1 in dark mode and 0.045 in light mode, so code blocks keep an edge.
 // Usage: node scripts/check-contrast.mjs <appearance.json>...
 import { readFileSync } from 'node:fs';
-import { contrastReport } from '../plugins/dsh-skin-import/scripts/lib/derive.mjs';
+import { CODE_SURFACE_MIN_DELTA, contrastReport } from '../plugins/dsh-skin-import/scripts/lib/derive.mjs';
 
 const LIMITS = { primary: 4.5, secondary: 4.5, tertiary: 3, accent: 4.5, inverted: 4.5, code: 4.5 };
 const files = process.argv.slice(2);
@@ -20,12 +22,13 @@ for (const file of files) {
     for (const [mode, def] of Object.entries(theme.modes)) {
       const report = contrastReport(def, mode);
       const cells = [];
-      for (const [key, limit] of Object.entries(LIMITS)) {
+      const limits = { ...LIMITS, codeSurface: CODE_SURFACE_MIN_DELTA[mode] };
+      for (const [key, limit] of Object.entries(limits)) {
         const entry = report[key];
         if (!entry) continue;
         const ok = entry.ratio >= limit;
         if (!ok) failures++;
-        cells.push(`${key} ${entry.ratio.toFixed(2)}${ok ? '' : ` < ${limit} on ${entry.surface}`}`);
+        cells.push(`${key} ${entry.ratio.toFixed(key === 'codeSurface' ? 3 : 2)}${ok ? '' : ` < ${limit} on ${entry.surface}`}`);
       }
       console.log(`${theme.id}/${mode}: ${cells.join(', ')}`);
     }

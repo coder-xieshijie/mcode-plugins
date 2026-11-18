@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "mcode-preset-themes",
   "displayName": "预设主题合集",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "9 套常见编辑器配色的 MCode 主题：Catppuccin、Dracula、Nord、Solarized、GitHub、One、Tokyo Night、Gruvbox、Rosé Pine。",
   "author": "coder-xieshijie",
   "icon": "icon.png",

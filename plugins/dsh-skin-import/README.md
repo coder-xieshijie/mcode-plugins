@@ -1,12 +1,12 @@
 # DSH 皮肤转换器（dsh-skin-import）
 
-带 Skill 的 MCode 插件：把 DeepSeek Harness（DSH）的皮肤类插件静态转换成 MCode 外观插件。用户在 MCode 里说“把 DSH 插件 xxx 转成 MCode 主题”，Agent 按 `skills/dsh-skin-import/SKILL.md` 下载、转换、讲拆解报告、问许可和是否安装，同意后装进本地插件目录并打开插件详情页，由用户自己点「应用」「用作壁纸」「用作开机画面」。
+带 Skill 的 MCode 插件：把 DeepSeek Harness（DSH）的皮肤类插件静态转换成 MCode 外观插件。用户在 MCode 里说“把 DSH 插件 xxx 转成 MCode 主题”，Agent 按 `skills/dsh-skin-import/SKILL.md` 下载、转换、讲拆解报告、问许可和是否安装，同意后装进本地插件目录，并告诉用户去插件详情页（插件管理 → 该插件 → 插件设置），由用户自己点「应用」「用作壁纸」「用作开机画面」。
 
 ## 安全边界
 
 - 只读源插件：`npm pack --ignore-scripts` 或 `git clone --depth 1` 下载到临时目录，不 `npm install`，不 `require` / `import` 它的文件，不执行它的代码。JS 里的主题数据用静态字面量解析读取。
 - 脚本只用 Node 自带模块，没有第三方依赖。
-- Agent 不替用户应用外观，只安装插件和打开 `minimax://plugin/details?name=<插件名>`。
+- Agent 不替用户应用外观，只安装插件。详情页深链的协议名随 MCode 版本不同（`minimax`、`minimax-cn`，测试/预发加 `-test` / `-staging`），插件读不到当前实例的协议名，所以只有明确知道协议名时才尝试打开，并且要用户确认详情页出来了才算打开。
 
 ## 能识别的格式
 
@@ -36,7 +36,7 @@
 ```sh
 node scripts/dsh-import.mjs <npm 包名 | git 地址 | 本地目录> --out <输出目录> [--allow id1,id2|all] [--include-capsules] [--name 插件名] [--json]
 node scripts/install.mjs <输出目录>/<插件名> --data-dir <MCode 数据目录> [--replace]
-node scripts/open-details.mjs <插件名>
+node scripts/open-details.mjs <插件名> [--scheme <协议名> --open]   # 输出 JSON：链接、是否交给系统、手动路径
 node --test test/*.test.mjs
 ```
 

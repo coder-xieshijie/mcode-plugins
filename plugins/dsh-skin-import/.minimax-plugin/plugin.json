@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "dsh-skin-import",
   "displayName": "DSH 皮肤转换器",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "把 DeepSeek Harness（DSH）的皮肤类插件静态转换成 MCode 外观插件：主题配色、字体、壁纸和开机动画，附拆解报告与许可检查。",
   "author": "coder-xieshijie",
   "icon": "icon.png",

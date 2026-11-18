@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "mcode-octopus-boot",
   "displayName": "章鱼少女开机动画",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MCode 章鱼少女的开机动画与壁纸：电路线稿亮起、代码唤醒、睁眼微笑，片尾溶解进 MCode 主界面；附 3 张章鱼少女壁纸。",
   "author": "coder-xieshijie",
   "icon": "icon.png",
