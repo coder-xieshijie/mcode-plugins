@@ -1,0 +1,16 @@
+{
+  "name": "mcode-plugins",
+  "private": true,
+  "type": "module",
+  "description": "MCode 外观插件：预设主题、章鱼开机动画、DSH 皮肤转换器",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs plugins/dsh-skin-import/test/*.test.mjs",
+    "build:themes": "node scripts/build-preset-themes.mjs",
+    "check:themes": "node scripts/build-preset-themes.mjs --check && node scripts/check-contrast.mjs plugins/preset-themes/appearance/appearance.json",
+    "build:octopus": "sh plugins/octopus-boot/build.sh"
+  }
+}

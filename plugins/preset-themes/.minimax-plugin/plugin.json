@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "name": "mcode-preset-themes",
+  "displayName": "预设主题合集",
+  "version": "0.1.0",
+  "description": "9 套常见编辑器配色的 MCode 主题：Catppuccin、Dracula、Nord、Solarized、GitHub、One、Tokyo Night、Gruvbox、Rosé Pine。",
+  "author": "coder-xieshijie",
+  "icon": "icon.png",
+  "category": "Design & Sites",
+  "exampleQueries": [
+    "把 MCode 换成 Catppuccin 配色",
+    "有没有 Nord 主题"
+  ],
+  "apps": [],
+  "mcpServers": [],
+  "skills": [],
+  "appearance": "appearance/appearance.json"
+}
