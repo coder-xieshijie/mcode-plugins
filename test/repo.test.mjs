@@ -14,15 +14,31 @@ test('preset themes are generated from palettes.mjs and pass the self-check', ()
   assert.deepEqual(validatePlugin(preset), []);
 });
 
-test('open-details never claims success and needs an explicit scheme', () => {
-  const run = (...a) => JSON.parse(execFileSync('node', ['plugins/dsh-skin-import/scripts/open-details.mjs', ...a], { cwd: root, env: { ...process.env, MCODE_DEEPLINK_SCHEME: '' } }).toString());
-  const none = run('mcode-demo');
+test('open-details never claims success and takes the scheme from MCODE_APP_SCHEME or --scheme', () => {
+  const run = (env, ...a) => JSON.parse(execFileSync('node', ['plugins/dsh-skin-import/scripts/open-details.mjs', ...a], { cwd: root, env: { ...process.env, MCODE_APP_SCHEME: env } }).toString());
+  const none = run('', 'mcode-demo');
   assert.equal(none.url, null);
   assert.equal(none.opened, false);
   assert.match(none.manualPath, /mcode-demo/u);
-  const staging = run('mcode-demo', '--scheme', 'minimax-cn-staging');
+  const fromEnv = run('minimax-cn-test', 'mcode-demo');
+  assert.equal(fromEnv.url, 'minimax-cn-test://plugin/details?name=mcode-demo');
+  assert.equal(fromEnv.launched, false);
+  const staging = run('minimax-cn-test', 'mcode-demo', '--scheme', 'minimax-cn-staging');
   assert.equal(staging.url, 'minimax-cn-staging://plugin/details?name=mcode-demo');
-  assert.equal(staging.launched, false);
+  assert.equal(run('not-a-scheme', 'mcode-demo').url, null);
+});
+
+test('open-boot builds the plugin/boot link only for a plugin with a boot page', () => {
+  const run = (env, dir) => JSON.parse(execFileSync('node', ['plugins/dsh-skin-import/scripts/open-boot.mjs', dir], { cwd: root, env: { ...process.env, MCODE_APP_SCHEME: env } }).toString());
+  const octopus = run('minimax-cn', root + 'plugins/octopus-boot/package');
+  const name = JSON.parse(readFileSync(root + 'plugins/octopus-boot/package/.minimax-plugin/plugin.json', 'utf8')).name;
+  assert.equal(octopus.hasBootPage, true);
+  assert.equal(octopus.url, 'minimax-cn://plugin/boot?name=' + name);
+  assert.equal(octopus.launched, false);
+  assert.equal(run('', root + 'plugins/octopus-boot/package').url, null);
+  const themes = run('minimax-cn', preset);
+  assert.equal(themes.hasBootPage, false);
+  assert.equal(themes.url, null);
 });
 
 test('preset themes keep body text at 4.5:1 or better', () => {
