@@ -16,11 +16,18 @@ const SKIP_DIRS = new Set(['node_modules', '.git', 'test', 'tests', '__tests__',
 const FOLLOW_HOST = new Set(['host', 'system', 'default', 'auto', 'follow', 'none', 'off', 'custom']);
 const MAX_TEXT = 8 * 1024 * 1024;
 
-/** Packages known not to be convertible, with the reason shown to the user. */
+/**
+ * Reasons a whole package cannot be converted. Everything else is converted field by field and the
+ * parts MCode cannot take over are reported item by item instead of rejecting the package.
+ */
 export const UNSUPPORTED = [
   [/wallpaper-engine/iu, '核心是把本机 Wallpaper Engine 壁纸（Scene / Web / 视频）放到聊天背后，依赖宿主侧 Node、随包 ffmpeg 和实时渲染引擎；MCode 插件壁纸只收包内静态图片或视频，页面沙箱也不能跑宿主侧代码。'],
-  [/liang|intensity-skin/iu, '卖点是推理等级滑块联动立绘和动态配色，依赖输入区 DOM 与当前模型状态；MCode 主题是静态数据，不能随模型状态变化，也没有聊天区立绘叠加。'],
-  [/beauti-?code/iu, '是背景管理器加 agent 工具（斜杠命令、本地媒体服务），没有可搬的配色；随包主题素材为 CC BY-NC-SA 且角色形象不授权。背景可以改用 MCode「设置 → 外观」自己上传。'],
+];
+
+/** Features that need the host runtime, reported when a package depends on them. */
+export const HOST_BOUND = [
+  [/liang|intensity-skin/iu, '推理等级滑块联动立绘与动态配色：MCode 主题是静态数据，不能随模型状态变化；立绘本身可以做成桌宠页。'],
+  [/beauti-?code/iu, '背景管理器与 agent 工具（斜杠命令、本地媒体服务）：MCode 外观不提供宿主侧服务；配色与素材若可静态读取仍会转换。'],
 ];
 
 export function walk(root, dir = root, out = []) {
@@ -49,6 +56,9 @@ export function analyzePackage(root, options = {}) {
   const result = { pkg: info, formats: [], themes: [], fonts: [], media: [], notes: [], skipped: [] };
   for (const [re, reason] of UNSUPPORTED) {
     if (re.test(info.name) || re.test(basename(root))) { result.unsupported = reason; return result; }
+  }
+  for (const [re, reason] of HOST_BOUND) {
+    if (re.test(info.name) || re.test(basename(root))) { result.hostBound = [...(result.hostBound ?? []), reason]; }
   }
   const files = walk(root);
   const textIndex = files
@@ -243,17 +253,36 @@ export function analyzePackage(root, options = {}) {
   }
   if (result.fonts.length) result.formats.push('字体文件');
 
-  // 8. Media: boot videos and background images/videos.
+  // 8. Media: boot videos, pet artwork and background images/videos.
+  // Pet artwork is matched first: a character image called "background" must not become the
+  // wallpaper, and a wallpaper called "pet.png" is still a pet.
   const config = textIndex.map((f) => { try { return f.rel.endsWith('.json') ? JSON.parse(f.text) : null; } catch { return null; } }).find((j) => j && (j.boot?.file || j.background?.file));
+  const PET_NAME = /pet|mascot|character|\bchara\b|live2d|sprite|chibi|avatar|立绘|角色|桌宠|桌宠/u;
+  const ANIM_EXT = new Set([...VIDEO_EXT, '.gif']);
+  // A pet page takes one asset: prefer something that moves, then images.
+  const petCandidates = files
+    .filter((f) => {
+      const ext = extname(f.path).toLowerCase();
+      if (!ANIM_EXT.has(ext) && !IMAGE_EXT.has(ext)) return false;
+      if (f.size > 16 * 1024 * 1024) return false;
+      return PET_NAME.test(basename(f.path, ext).toLowerCase());
+    })
+    .sort((a, b) => {
+      const anim = (f) => (ANIM_EXT.has(extname(f.path).toLowerCase()) ? 0 : 1);
+      return anim(a) - anim(b) || b.size - a.size;
+    });
+  let petAsset = petCandidates[0] ?? null;
   for (const f of files) {
     const ext = extname(f.path).toLowerCase();
     if (result.media.some((m) => m.path === f.path)) continue;
     const name = basename(f.path).toLowerCase();
     let role = null;
-    if (VIDEO_EXT.has(ext) && /boot|splash|startup|开机|intro/u.test(name)) role = 'boot';
+    if (f === petAsset) role = 'pet';
+    else if (VIDEO_EXT.has(ext) && /boot|splash|startup|开机|intro/u.test(name)) role = 'boot';
     else if ((VIDEO_EXT.has(ext) || (IMAGE_EXT.has(ext) && f.size >= 100 * 1024)) && /background|wallpaper|backdrop|\bbg\b|bg[-_.]|聊天背景|壁纸/u.test(name)) role = 'wallpaper';
     if (!role) continue;
-    const item = { id: slug(basename(f.path, ext)), role, kind: VIDEO_EXT.has(ext) ? 'video' : 'image', path: f.path, rel: f.rel, size: f.size, label: title(basename(f.path, ext)), license: mediaLicense({ root, file: f.path }) };
+    const item = { id: slug(basename(f.path, ext)), role, kind: VIDEO_EXT.has(ext) || ext === '.gif' ? 'video' : 'image', path: f.path, rel: f.rel, size: f.size, label: title(basename(f.path, ext)), license: mediaLicense({ root, file: f.path }) };
+    if (role === 'pet') item.animated = ANIM_EXT.has(ext);
     if (config?.background && role === 'wallpaper' && item.kind === 'video') {
       const b = config.background;
       item.defaults = { dim: clampInt((b.veil ?? 0.14) * 100, 0, 70), readingSurfaceOpacity: clampInt((b.surface ?? 0.6) * 100, 0, 100), blur: 0 };
@@ -261,7 +290,11 @@ export function analyzePackage(root, options = {}) {
     if (config?.boot && role === 'boot') item.boot = { fadeMs: config.boot.fadeMs, sound: config.boot.sound };
     result.media.push(item);
   }
-  if (result.media.length) result.formats.push('素材（开机视频 / 背景）');
+  if (result.media.length) {
+    const roles = new Set(result.media.map((m) => m.role));
+    const labels = [roles.has('boot') && '开机视频', roles.has('pet') && '桌宠立绘', roles.has('wallpaper') && '背景'].filter(Boolean);
+    result.formats.push('素材（' + labels.join(' / ') + '）');
+  }
   if (!result.themes.length && !result.fonts.length && !result.media.length) {
     result.unsupported = '没有找到可以静态解析的配色、字体或素材：可能主题是运行时计算出来的，或者插件只做 DOM 改写与功能。';
   }

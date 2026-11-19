@@ -8,7 +8,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test test/*.test.mjs plugins/dsh-skin-import/test/*.test.mjs",
+    "test": "node --test test/*.test.mjs plugins/dsh-plugin-convert/test/*.test.mjs",
     "build:themes": "node scripts/build-preset-themes.mjs",
     "check:themes": "node scripts/build-preset-themes.mjs --check && node scripts/check-contrast.mjs plugins/preset-themes/appearance/appearance.json",
     "build:octopus": "sh plugins/octopus-boot/build.sh"

@@ -12,6 +12,7 @@ import { validatePlugin } from './validate.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TEMPLATE = join(HERE, '../../templates/boot-video');
+const PET_TEMPLATE = join(HERE, '../../templates/pet-character');
 const MiB = 1024 * 1024;
 const FILE_LIMIT = 16 * MiB; // MiniMax Plugin V1 per-file limit (stricter than appearance's 50 MB)
 const TOTAL_BUDGET = 60 * MiB;
@@ -70,7 +71,7 @@ export function convert(analysis, { root, outDir, allow = new Set(), name } = {}
   mkdirSync(join(dir, 'appearance'), { recursive: true });
   const report = {
     plugin: pluginName, dir, source: analysis.pkg, formats: analysis.formats,
-    themes: [], fonts: [], wallpapers: [], boot: null, pending: [], excluded: [], lost: [], adjustments: 0,
+    themes: [], fonts: [], wallpapers: [], boot: null, pet: null, pending: [], excluded: [], lost: [], adjustments: 0,
     skipped: analysis.skipped, licenseFiles: [],
   };
   const decl = { schemaVersion: 1 };
@@ -171,10 +172,13 @@ export function convert(analysis, { root, outDir, allow = new Set(), name } = {}
   // Media.
   const ffmpeg = hasFfmpeg();
   const wallpapers = [];
+  const pages = [];
+  let bootSettings = [];
+  let petSettings = [];
   for (const media of analysis.media) {
     const ok = media.license.status === 'ok' || allowed(media.id);
     if (!ok) {
-      report.pending.push({ kind: media.role === 'boot' ? '开机视频' : '壁纸', id: media.id, name: media.rel, status: media.license.status, reason: media.license.reason });
+      report.pending.push({ kind: { boot: '开机视频', pet: '桌宠立绘' }[media.role] ?? '壁纸', id: media.id, name: media.rel, status: media.license.status, reason: media.license.reason });
       continue;
     }
     const size = statSync(media.path).size;
@@ -196,9 +200,9 @@ export function convert(analysis, { root, outDir, allow = new Set(), name } = {}
       writeFileSync(join(pageDir, 'index.html'), html);
       copyFileSync(join(TEMPLATE, 'boot.js'), join(pageDir, 'boot.js'));
       copyFileSync(join(TEMPLATE, 'boot.css'), join(pageDir, 'boot.css'));
-      decl.pages = [{ slot: 'boot', entry: 'pages/boot/index.html', label: '开机动画（' + analysis.pkg.name + '）' }];
+      pages.push({ slot: 'boot', entry: 'pages/boot/index.html', label: '开机动画（' + analysis.pkg.name + '）' });
       const fade = Math.round(Math.min(3000, Math.max(200, Number(media.boot?.fadeMs) || 800)));
-      decl.settings = [
+      bootSettings = [
         { key: 'sound', label: '播放声音', description: '开机时播放视频原声；不允许带声自动播放时自动退回静音。', type: 'boolean', default: media.boot?.sound !== false },
         { key: 'ending', label: '结束方式', type: 'select', options: [{ value: 'dissolve', label: '片尾溶解进界面' }, { value: 'after', label: '放完再淡出' }], default: 'dissolve' },
         { key: 'fade-ms', label: '溶解时长（毫秒）', type: 'number', min: 200, max: 3000, default: fade },
@@ -206,6 +210,32 @@ export function convert(analysis, { root, outDir, allow = new Set(), name } = {}
         { key: 'show-progress', label: '显示启动进度条', type: 'boolean', default: true },
       ];
       report.boot = { id: media.id, file: media.rel, poster: Boolean(poster), license: media.license.status === 'ok' ? media.license.license : '用户确认后打包' };
+      continue;
+    }
+    if (media.role === 'pet') {
+      if (report.pet) { report.excluded.push({ kind: '桌宠立绘', id: media.id, reason: '一个插件只有一个桌宠页，已用 ' + report.pet.id }); continue; }
+      const pageDir = join(dir, 'pages/pet');
+      mkdirSync(join(pageDir, 'media'), { recursive: true });
+      const petFile = 'media/pet' + ext;
+      copyFileSync(media.path, join(pageDir, petFile));
+      budget += size;
+      const tag = media.kind === 'video'
+        ? '<video id="mascot" src="' + petFile + '" muted loop autoplay playsinline></video>'
+        : '<img id="mascot" src="' + petFile + '" alt="" />';
+      const html = readFileSync(join(PET_TEMPLATE, 'index.html'), 'utf8')
+        .replace('{{TITLE}}', cut('桌宠（' + analysis.pkg.name + '）', 80))
+        .replace('{{TIP}}', '')
+        .replace('{{MEDIA}}', tag);
+      writeFileSync(join(pageDir, 'index.html'), html);
+      copyFileSync(join(PET_TEMPLATE, 'pet.css'), join(pageDir, 'pet.css'));
+      writeFileSync(join(pageDir, 'pet.js'), readFileSync(join(PET_TEMPLATE, 'pet.js'), 'utf8').replaceAll("'{{LABEL}}'", JSON.stringify(cut(media.label || analysis.pkg.name, 60))));
+      pages.push({ slot: 'pet', entry: 'pages/pet/index.html', label: '桌宠（' + analysis.pkg.name + '）' });
+      petSettings = [
+        { key: 'open-on-double-click', label: '双击打开主窗口', type: 'boolean', default: true },
+        { key: 'show-count', label: '显示会话状态', description: '有待处理或运行中的会话时，在角色下方显示数量。', type: 'boolean', default: true },
+        { key: 'idle-animation', label: '待机呼吸动画', type: 'boolean', default: true },
+      ];
+      report.pet = { id: media.id, file: media.rel, kind: media.kind, animated: Boolean(media.animated), license: media.license.status === 'ok' ? media.license.license : '用户确认后打包' };
       continue;
     }
     mkdirSync(join(dir, 'wallpapers'), { recursive: true });
@@ -229,7 +259,12 @@ export function convert(analysis, { root, outDir, allow = new Set(), name } = {}
     report.wallpapers.push({ id, kind: media.kind, file: media.rel, license: media.license.status === 'ok' ? media.license.license : '用户确认后打包' });
   }
   if (wallpapers.length) decl.wallpapers = wallpapers;
+  if (pages.length) decl.pages = pages;
+  const settings = [...bootSettings, ...petSettings];
+  if (settings.length) decl.settings = settings;
 
+  report.coverage = coverageTable({ themes, fonts, wallpapers, pages, settings, boot: report.boot, pet: report.pet, analysis, styleOnly: styleOnlyCount(root) });
+  if (analysis.hostBound?.length) report.lost.push(...analysis.hostBound);
   report.lost.push(...featureLosses(root));
   const empty = !decl.themes && !decl.fonts && !decl.pages && !decl.wallpapers;
   if (empty) {
@@ -248,11 +283,11 @@ export function convert(analysis, { root, outDir, allow = new Set(), name } = {}
   }
   const first = themes[0]?.preview;
   writeFileSync(join(dir, 'icon.png'), swatchIcon(first ? [first.canvas, first.surface, first.accent, first.text] : ['#1b1d24', '#3a7bff', '#7fd8ff', '#e8f1f8']));
-  const author = typeof analysis.pkg.author === 'string' ? analysis.pkg.author : 'dsh-skin-import';
+  const author = typeof analysis.pkg.author === 'string' ? analysis.pkg.author : 'dsh-plugin-convert';
   const version = /^\d+\.\d+\.\d+(?:-[\w.]+)?$/u.test(analysis.pkg.version) ? analysis.pkg.version : '0.1.0';
   const manifest = {
     schemaVersion: 1, name: pluginName, displayName: cut(analysis.pkg.name + '（MCode 转换）', 80), version,
-    description: cut(`由 dsh-skin-import 从 DSH 插件 ${analysis.pkg.name} ${analysis.pkg.version} 转换的外观：${[themes.length && themes.length + ' 套主题', fonts.length && fonts.length + ' 款字体', wallpapers.length && wallpapers.length + ' 张壁纸', decl.pages && '开机动画'].filter(Boolean).join('、')}。来源与许可见 CONVERSION.md。`, 300),
+    description: cut(`由 dsh-plugin-convert 从 DSH 插件 ${analysis.pkg.name} ${analysis.pkg.version} 转换的外观：${[themes.length && themes.length + ' 套主题', fonts.length && fonts.length + ' 款字体', wallpapers.length && wallpapers.length + ' 张壁纸', report.boot && '开机动画', report.pet && '桌宠'].filter(Boolean).join('、')}。来源与许可见 CONVERSION.md。`, 300),
     author, icon: 'icon.png', category: 'Design & Sites',
     exampleQueries: [`用 ${analysis.pkg.name} 转换来的外观`], apps: [], mcpServers: [], skills: [],
     appearance: 'appearance/appearance.json',
@@ -264,11 +299,52 @@ export function convert(analysis, { root, outDir, allow = new Set(), name } = {}
   return report;
 }
 
+/** Count of CSS/DOM rewrites in the source, so the coverage table can say they have no counterpart. */
+export function styleOnlyCount(root) {
+  const stats = { glass: 0, selectors: 0, dom: 0 };
+  const visit = (dir) => {
+    for (const name of readdirSync(dir)) {
+      if (name === 'node_modules' || name.startsWith('.')) continue;
+      const p = join(dir, name);
+      const st = statSync(p);
+      if (st.isDirectory()) visit(p);
+      else if (/\.(?:m?js|cjs|css|ts)$/u.test(name) && st.size < 8 * MiB) {
+        const t = readFileSync(p, 'utf8');
+        stats.glass += (t.match(/backdrop-filter/gu) ?? []).length;
+        stats.selectors += (t.match(/\[class\*=/gu) ?? []).length;
+        stats.dom += (t.match(/querySelector|createElement\(/gu) ?? []).length;
+      }
+    }
+  };
+  visit(root);
+  return stats.glass + stats.selectors + stats.dom;
+}
+
+/**
+ * One row per appearance extension point the Host exposes, so the report answers "what of this
+ * plugin can MCode take over" item by item instead of listing only what happened to be found.
+ */
+export function coverageTable({ themes, fonts, wallpapers, pages, settings, boot, pet, analysis, styleOnly }) {
+  const has = (slot) => pages.some((p) => p.slot === slot);
+  const rows = [
+    { point: 'themes', host: '主题配色（47 颜色 token + 9 代码 token）', source: analysis.themes.length ? `${analysis.themes.length} 处配色` : '无', result: themes.length ? `${themes.length} 套` : '未生成', note: themes.length ? '数值主题，应用后接管界面与代码高亮' : analysis.themes.length ? '配色没能求值成合法颜色，见“其他没收录的”' : '' },
+    { point: 'fonts', host: '字体（UI / 代码）', result: fonts.length ? `${fonts.length} 款` : '未生成', source: analysis.fonts.length ? `${analysis.fonts.length} 款字体` : '无', note: fonts.length ? '随包字体需要许可；本机已装的字体不需要转换，去插件设置区直接选' : '' },
+    { point: 'wallpapers', host: '壁纸（图片 / 静音循环视频）', result: wallpapers.length ? `${wallpapers.length} 张` : '未生成', source: analysis.media.filter((m) => m.role === 'wallpaper').length ? `${analysis.media.filter((m) => m.role === 'wallpaper').length} 个背景素材` : '无', note: wallpapers.length ? '视频壁纸会自动截封面图' : '' },
+    { point: 'pages.boot', host: '开机画面（pages/boot）', result: boot ? '已生成' : '未生成', source: boot ? boot.file : analysis.media.some((m) => m.role === 'boot') ? '有开机视频但被排除' : '无', note: boot ? '套标准开机页：进度条、就绪后片尾溶解进主界面、点击跳过、Esc 跳过' : '' },
+    { point: 'pages.pet', host: '桌宠（pages/pet）', result: pet ? '已生成' : '未生成', source: pet ? pet.file : '无', note: pet ? '立绘素材做成桌宠页：会话状态、双击开主窗口、右键菜单、拖动' : '源插件里没有立绘 / 角色素材' },
+    { point: 'settings', host: '插件设置项', result: settings.length ? `${settings.length} 项` : '未生成', source: settings.length ? '由生成的页面推导' : '无', note: settings.length ? '只覆盖转换出来的页面自己的开关' : '' },
+    { point: 'appearance', host: 'manifest 的 appearance 字段', result: '已写入', source: '—', note: '取值固定为 appearance/appearance.json' },
+  ];
+  if (styleOnly) rows.push({ point: 'css / dom', host: '任意 CSS 与 DOM 改写', result: '无对应扩展点', source: `${styleOnly} 处`, note: 'MCode 不开放任意 CSS 与 DOM 改写，这部分只能在开机页 / 桌宠页里重画' });
+  // An empty cell reads as "not looked at"; every row states its own answer.
+  return rows.map((row) => ({ ...row, source: row.source || '无', note: row.note || '—' }));
+}
+
 export function conversionMarkdown(report, analysis) {
   const p = analysis.pkg;
   const lines = [];
   lines.push(`# 转换记录：${p.name}`, '');
-  lines.push(`本插件由 dsh-skin-import 从 DeepSeek Harness（DSH）插件静态转换而来，转换时没有执行源插件的任何代码。`, '');
+  lines.push(`本插件由 dsh-plugin-convert 从 DeepSeek Harness（DSH）插件静态转换而来，转换时没有执行源插件的任何代码。`, '');
   lines.push('## 来源', '');
   lines.push(`- 包：${p.name} ${p.version}`);
   lines.push(`- 代码许可：${p.license ?? '未声明'}`);
@@ -279,7 +355,7 @@ export function conversionMarkdown(report, analysis) {
   if (report.themes.length) {
     lines.push('| 主题 | 模式 | 直接对应 | 调整 | 来源格式 |', '|---|---|---|---|---|');
     for (const t of report.themes) lines.push(`| ${t.label}（${t.id}） | ${t.modes.join(' / ')} | ${t.mapped} | ${t.adjusted} | ${t.format} |`);
-    lines.push('', 'MCode 主题有 47 个颜色 token 和 9 个代码 token。“直接对应”是从源插件变量直接取值的数量，其余按派生规则从底色、正文、强调色推算（见 dsh-skin-import 的映射表）；“调整”是为满足正文对比度 ≥ 4.5:1 等要求改过的颜色。', '');
+    lines.push('', 'MCode 主题有 47 个颜色 token 和 9 个代码 token。“直接对应”是从源插件变量直接取值的数量，其余按派生规则从底色、正文、强调色推算（见 dsh-plugin-convert 的映射表）；“调整”是为满足正文对比度 ≥ 4.5:1 等要求改过的颜色。', '');
   }
   if (report.fonts.length) {
     lines.push('| 字体 | 文件数 | 许可 |', '|---|---|---|');
@@ -292,6 +368,12 @@ export function conversionMarkdown(report, analysis) {
     lines.push('');
   }
   if (report.boot) lines.push(`开机动画：${report.boot.file}，套用标准开机页（进度条、就绪后片尾溶解进主界面、点击跳过）；许可：${report.boot.license}。`, '');
+  if (report.pet) lines.push(`桌宠：${report.pet.file}（${report.pet.kind === 'video' ? '循环视频' : '静态立绘'}），套用标准桌宠页（会话状态、双击开主窗口、右键菜单、拖动）；许可：${report.pet.license}。`, '');
+  if (report.coverage) {
+    lines.push('## 对外观扩展点逐项对照', '', '| 扩展点 | 产出 | 源 | 说明 |', '|---|---|---|---|');
+    for (const row of report.coverage) lines.push(`| ${row.host} | ${row.result} | ${row.source} | ${row.note} |`);
+    lines.push('');
+  }
   const adj = report.themes.flatMap((t) => (t.adjustments ?? []).map((a) => `- ${t.id}/${a.mode} ${a.token}：${a.from} → ${a.to}（${a.reason}）`));
   if (adj.length) lines.push('### 颜色调整', '', ...adj.slice(0, 200), adj.length > 200 ? `- ……另 ${adj.length - 200} 处` : '', '');
   lines.push('## 丢失项', '');

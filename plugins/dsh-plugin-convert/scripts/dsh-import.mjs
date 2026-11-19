@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// dsh-skin-import: convert a DeepSeek Harness skin plugin into a MiniMax Code appearance plugin.
+// dsh-plugin-convert: convert a DeepSeek Harness skin plugin into a MiniMax Code appearance plugin.
 // Usage:
 //   node scripts/dsh-import.mjs <npm package | git URL | local directory> [--out DIR]
 //        [--allow id1,id2 | --allow all] [--include-capsules] [--name plugin-name] [--json]
@@ -14,7 +14,7 @@ import { convert } from './lib/convert.mjs';
 import { renderReport } from './lib/report.mjs';
 
 function parseArgs(argv) {
-  const opts = { allow: new Set(), out: join(tmpdir(), 'dsh-skin-import-out'), json: false, includeCapsules: false };
+  const opts = { allow: new Set(), out: join(tmpdir(), 'dsh-plugin-convert-out'), json: false, includeCapsules: false };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];

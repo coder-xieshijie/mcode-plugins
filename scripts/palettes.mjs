@@ -1,6 +1,6 @@
 // Preset theme palettes, written from each project's published palette.
 // Sources and licences: see NOTICE.md and plugins/preset-themes/README.md.
-// Seed fields feed plugins/dsh-skin-import/scripts/lib/derive.mjs, which fills all 47 tokens.
+// Seed fields feed plugins/dsh-plugin-convert/scripts/lib/derive.mjs, which fills all 47 tokens.
 
 const MONO = ['JetBrains Mono', 'Fira Code', 'SF Mono', 'Menlo', 'Cascadia Code', 'Consolas', 'monospace'];
 const mono = (first) => [first, ...MONO.filter((f) => f !== first)];

@@ -8,6 +8,11 @@ export function renderReport(r) {
   }
   out.push(`## ${src}`, '');
   out.push(`识别出的格式：${r.formats.join('、') || '无'}`, '');
+  if (r.coverage) {
+    out.push('### 对外观扩展点逐项对照', '', '| 扩展点 | 产出 | 源 | 说明 |', '|---|---|---|---|');
+    for (const row of r.coverage) out.push(`| ${row.host} | ${row.result} | ${row.source} | ${row.note} |`);
+    out.push('');
+  }
   if (r.empty) {
     out.push('没有可以打包的内容（素材都在等待许可确认，或被包体积上限排除）。');
   } else {
@@ -16,6 +21,7 @@ export function renderReport(r) {
     if (r.fonts.length) out.push(`- 字体 ${r.fonts.length} 款：${r.fonts.map((f) => `${f.family}（${f.license}）`).join('、')}`);
     if (r.wallpapers.length) out.push(`- 壁纸 ${r.wallpapers.length} 张：${r.wallpapers.map((w) => w.id).join('、')}`);
     if (r.boot) out.push(`- 开机动画：${r.boot.file}（标准开机页，片尾溶解进界面）`);
+    if (r.pet) out.push(`- 桌宠：${r.pet.file}（${r.pet.kind === 'video' ? '循环视频' : '静态立绘'}；点一下看会话状态，双击开主窗口，右键有菜单）`);
     out.push('');
   }
   out.push('### 丢掉的', '');

@@ -1,6 +1,6 @@
-# DSH 皮肤转换器（dsh-skin-import）
+# DSH 插件转换器（dsh-plugin-convert）
 
-带 Skill 的 MCode 插件：把 DeepSeek Harness（DSH）的皮肤类插件静态转换成 MCode 外观插件。用户在 MCode 里说“把 DSH 插件 xxx 转成 MCode 主题”，Agent 按 `skills/dsh-skin-import/SKILL.md` 下载、转换、讲拆解报告、问许可和是否安装，同意后装进本地插件目录；插件带开机动画时用深链 `plugin/boot` 把它设为开机画面（下次启动生效，用户可在插件设置区关掉）；再告诉用户去插件详情页（插件管理 → 该插件 → 插件设置），由用户自己点「应用」「用作 UI 字体」「用作壁纸」。
+带 Skill 的 MCode 插件：把 DeepSeek Harness（DSH）的插件静态转换成 MCode 外观插件。判据是 MCode 暴露的外观扩展点，不是源插件叫什么：主题、字体、壁纸、开机画面、桌宠、插件设置六项，能对应上的都转，对不上的逐项写进报告。用户在 MCode 里说“把 DSH 插件 xxx 转成 MCode 主题”，Agent 按 `skills/dsh-plugin-convert/SKILL.md` 下载、转换、讲拆解报告、问许可和是否安装，同意后装进本地插件目录；插件带开机动画时用深链 `plugin/boot` 把它设为开机画面（下次启动生效，用户可在插件设置区关掉）；再告诉用户去插件详情页（插件管理 → 该插件 → 插件设置），由用户自己点「应用」「用作 UI 字体」「用作壁纸」。
 
 ## 安全边界
 
@@ -21,10 +21,13 @@
 | `PALETTE` 色板字面量（OKLCH） | bloom 的 15 套色板 | 亮暗主题 |
 | 字体文件、`@font-face` 内联 data URI | claude-style、opencode-palette | `fonts`（带 `files`） |
 | 开机视频、背景图片 / 视频 | video-skin | 标准开机页、`wallpapers` |
+| 立绘 / 角色素材（`pet`、`mascot`、`character`、`live2d`、`立绘` 等命名） | dream-skin 的角色图 | 标准桌宠页 `pages/pet`：点一下看会话状态、双击开主窗口、右键菜单、可拖动 |
 
 颜色值里的 `var()`、`color-mix()`、`oklch()`、`oklab()`、`hsl()`、`rgba()`、`calc()` 按 DSH 默认色阶（`scripts/lib/dsh-defaults.json`）求值成 `#rrggbbaa`；DSH `--dsw-*` 到 MCode token 的对应表在 `scripts/lib/mapping.mjs`，缺的 token 由 `scripts/lib/derive.mjs` 按规则推算，并保证正文对比度 ≥ 4.5:1。
 
-已知不支持、只出报告的：dsh-wallpaper-engine（宿主侧 Node 与本机 Wallpaper Engine）、dsh-liang-skin（推理滑块联动立绘）、beautiCode（背景管理器与 agent 工具）。
+报告里有一张「对外观扩展点逐项对照」表，六项各占一行，写清产出、来源和说明，所以「这个插件能转什么」不用从报告里推断。
+
+只有整包没有可搬内容时才整包拒绝：目前是 dsh-wallpaper-engine（宿主侧 Node 与本机 Wallpaper Engine，素材要实时渲染）。dsh-liang-skin（推理滑块联动）和 beautiCode（背景管理器与 agent 工具）改成逐项处理：能静态读取的配色、字体、立绘照转，依赖宿主运行时的部分写进「丢掉的」。
 
 ## 许可检查
 

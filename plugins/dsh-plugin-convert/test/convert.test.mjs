@@ -93,3 +93,35 @@ test('known unsupported plugins only get a reason', () => {
   const a = analyzePackage(fx('unsupported'));
   assert.match(a.unsupported, /Wallpaper Engine/u);
 });
+
+test('character artwork becomes a pet page beside themes and wallpapers', () => {
+  const root = fx('pet-character');
+  const a = analyzePackage(root);
+  assert.deepEqual(a.media.map((m) => m.role).sort(), ['pet', 'wallpaper']);
+  const r = convert(a, { root, outDir: out() });
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.pet.file, 'assets/pet-mascot.png');
+  const d = decl(r);
+  assert.deepEqual(d.pages.map((p) => p.slot), ['pet']);
+  assert.equal(d.pages[0].entry, 'pages/pet/index.html');
+  assert.equal(d.themes[0].id, 'pet-night');
+  assert.equal(d.wallpapers.length, 1);
+  // The pet page asks the Host for nothing the page sandbox cannot do.
+  const page = readFileSync(join(r.dir, 'pages/pet/pet.js'), 'utf8');
+  assert.match(page, /mcodeAppearance/u);
+  assert.match(page, /"Pet Mascot"/u);
+  assert.doesNotMatch(page, /require\(|import\s|https?:\/\//u);
+  assert.deepEqual(d.settings.map((s) => s.key), ['open-on-double-click', 'show-count', 'idle-animation']);
+  // Every appearance extension point gets a row, so "nothing to convert" is answered item by item.
+  const points = r.coverage.map((row) => row.point);
+  assert.deepEqual(points.slice(0, 6), ['themes', 'fonts', 'wallpapers', 'pages.boot', 'pages.pet', 'settings']);
+  assert.ok(r.coverage.find((row) => row.point === 'pages.boot').result === '未生成');
+  assert.ok(r.coverage.find((row) => row.point === 'pages.pet').result === '已生成');
+});
+
+test('only a host-bound package is refused; the rest converts what it can and reports the rest', () => {
+  const a = analyzePackage(fx('unsupported'));
+  assert.match(a.unsupported, /Wallpaper Engine/u);
+  const b = analyzePackage(fx('pet-character'));
+  assert.equal(b.hostBound, undefined);
+});

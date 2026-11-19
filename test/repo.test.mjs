@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { validatePlugin } from '../plugins/dsh-skin-import/scripts/lib/validate.mjs';
-import { CODE_SURFACE_MIN_DELTA, contrastReport } from '../plugins/dsh-skin-import/scripts/lib/derive.mjs';
+import { validatePlugin } from '../plugins/dsh-plugin-convert/scripts/lib/validate.mjs';
+import { CODE_SURFACE_MIN_DELTA, contrastReport } from '../plugins/dsh-plugin-convert/scripts/lib/derive.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const preset = root + 'plugins/preset-themes';
@@ -15,7 +15,7 @@ test('preset themes are generated from palettes.mjs and pass the self-check', ()
 });
 
 test('open-details never claims success and takes the scheme from MCODE_APP_SCHEME or --scheme', () => {
-  const run = (env, ...a) => JSON.parse(execFileSync('node', ['plugins/dsh-skin-import/scripts/open-details.mjs', ...a], { cwd: root, env: { ...process.env, MCODE_APP_SCHEME: env } }).toString());
+  const run = (env, ...a) => JSON.parse(execFileSync('node', ['plugins/dsh-plugin-convert/scripts/open-details.mjs', ...a], { cwd: root, env: { ...process.env, MCODE_APP_SCHEME: env } }).toString());
   const none = run('', 'mcode-demo');
   assert.equal(none.url, null);
   assert.equal(none.opened, false);
@@ -29,7 +29,7 @@ test('open-details never claims success and takes the scheme from MCODE_APP_SCHE
 });
 
 test('open-boot builds the plugin/boot link only for a plugin with a boot page', () => {
-  const run = (env, dir) => JSON.parse(execFileSync('node', ['plugins/dsh-skin-import/scripts/open-boot.mjs', dir], { cwd: root, env: { ...process.env, MCODE_APP_SCHEME: env } }).toString());
+  const run = (env, dir) => JSON.parse(execFileSync('node', ['plugins/dsh-plugin-convert/scripts/open-boot.mjs', dir], { cwd: root, env: { ...process.env, MCODE_APP_SCHEME: env } }).toString());
   const octopus = run('minimax-cn', root + 'plugins/octopus-boot/package');
   const name = JSON.parse(readFileSync(root + 'plugins/octopus-boot/package/.minimax-plugin/plugin.json', 'utf8')).name;
   assert.equal(octopus.hasBootPage, true);

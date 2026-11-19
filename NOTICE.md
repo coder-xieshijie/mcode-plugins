@@ -22,8 +22,8 @@
 
 开机视频、关键帧和壁纸来自“MCode 章鱼少女”（https://github.com/coder-xieshijie/mcode-octopus-girl），按 CC BY 4.0 授权，署名“MCode 章鱼少女 by coder-xieshijie”；改动与例外见 `plugins/octopus-boot/LICENSE-ARTWORK.md`。“MiniMax”“MCode”名称与 MCode 章鱼图标不在许可内。本项目是个人非官方作品。
 
-## DSH 默认色阶（plugins/dsh-skin-import）
+## DSH 默认色阶（plugins/dsh-plugin-convert）
 
-`plugins/dsh-skin-import/scripts/lib/dsh-defaults.json` 是从 DeepSeek Harness 的 `packages/client/ui-theme/src/styles`（design-platform.css、shiki.css、base.css）提取的默认变量值，用于求值 DSH 皮肤里的 `var()` 引用。DeepSeek Harness 按 MIT 授权，Copyright (c) 2026 DeepSeek。
+`plugins/dsh-plugin-convert/scripts/lib/dsh-defaults.json` 是从 DeepSeek Harness 的 `packages/client/ui-theme/src/styles`（design-platform.css、shiki.css、base.css）提取的默认变量值，用于求值 DSH 皮肤里的 `var()` 引用。DeepSeek Harness 按 MIT 授权，Copyright (c) 2026 DeepSeek。
 
 转换器生成的插件只包含用户自己选择转换的 DSH 插件内容，许可随源插件，转换器会把源插件的许可文本放进生成插件的 `LICENSES/`。

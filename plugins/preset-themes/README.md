@@ -19,7 +19,7 @@
 ## 怎么来的
 
 - 色板写在仓库 `scripts/palettes.mjs`：每套给底色、侧栏、卡片、正文三档、强调色、边框和代码高亮颜色（都取自官方色板）。
-- `node scripts/build-preset-themes.mjs` 用 `plugins/dsh-skin-import/scripts/lib/derive.mjs` 补全 MCode 的 47 个颜色 token、9 个代码 token 和背景光晕，生成 `appearance/appearance.json`，并打印为对比度做的每一处微调。
+- `node scripts/build-preset-themes.mjs` 用 `plugins/dsh-plugin-convert/scripts/lib/derive.mjs` 补全 MCode 的 47 个颜色 token、9 个代码 token 和背景光晕，生成 `appearance/appearance.json`，并打印为对比度做的每一处微调。
 - `node scripts/check-contrast.mjs plugins/preset-themes/appearance/appearance.json` 检查：正文对所有底色 ≥ 4.5:1，次要文字和强调色文字对阅读面 ≥ 4.5:1，三级文字 ≥ 3:1，主按钮上的文字 ≥ 4.5:1，代码正文 ≥ 4.5:1。官方色板里对比度不够的文字色（如 Solarized Light 的正文、Tokyo Night Day 的正文）会按这个标准调深或调浅，色相不变。
 - 图标由 `node scripts/build-preset-icon.mjs` 生成。
 

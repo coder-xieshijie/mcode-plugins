@@ -1,14 +1,14 @@
 # mcode-plugins
 
-MCode 外观插件合集。三个插件都是 MiniMax 格式的本地插件（`.minimax-plugin/plugin.json`），用 MCode 的插件外观扩展点交付主题、壁纸和开机画面。
+MCode 外观插件合集。三个插件都是 MiniMax 格式的本地插件（`.minimax-plugin/plugin.json`），用 MCode 的插件外观扩展点交付主题、字体、壁纸、开机画面和桌宠。
 
 | 插件 | 目录 | 内容 |
 |---|---|---|
 | `mcode-preset-themes` 预设主题合集 | [plugins/preset-themes](plugins/preset-themes/) | 9 套编辑器配色：Catppuccin、Dracula、Nord、Solarized、GitHub、One、Tokyo Night、Gruvbox、Rosé Pine |
 | `mcode-octopus-boot` 章鱼少女开机动画 | [plugins/octopus-boot](plugins/octopus-boot/) | 开机视频，片尾溶解进主界面；3 张章鱼少女壁纸 |
-| `dsh-skin-import` DSH 皮肤转换器 | [plugins/dsh-skin-import](plugins/dsh-skin-import/) | 带 Skill：把 DeepSeek Harness 皮肤类插件静态转换成 MCode 外观插件 |
+| `dsh-plugin-convert` DSH 插件转换器 | [plugins/dsh-plugin-convert](plugins/dsh-plugin-convert/) | 带 Skill：把 DeepSeek Harness 插件静态转换成 MCode 外观插件，能对应到外观扩展点的都转 |
 
-需要支持插件外观（主题、字体、壁纸、开机画面）的 MCode 版本。只带外观的插件在旧版 MCode 上会因为“没有可用能力”而装不上。
+需要支持插件外观（主题、字体、壁纸、开机画面、桌宠）的 MCode 版本。只带外观的插件在旧版 MCode 上会因为“没有可用能力”而装不上。
 
 ## 构建
 
@@ -23,7 +23,7 @@ sh plugins/octopus-boot/build.sh           # 组装章鱼插件到 plugins/octop
 
 - 预设主题：`plugins/preset-themes/` 本身就是可安装的插件目录，`appearance/appearance.json` 已生成入库。
 - 章鱼插件：源码在 `package/`，视频与关键帧在 `assets/`，`build.sh` 把两者组装成安装包；壁纸已裁好入库，换素材时用 `make-wallpapers.sh` 重做（需要 `cwebp`）。
-- DSH 转换器：`plugins/dsh-skin-import/` 就是插件目录；`scripts/build-dsh-defaults.mjs` 用于从 DeepSeek Harness 源码重新生成它的默认色阶表。
+- DSH 转换器：`plugins/dsh-plugin-convert/` 就是插件目录；`scripts/build-dsh-defaults.mjs` 用于从 DeepSeek Harness 源码重新生成它的默认色阶表。
 
 ## 安装
 
@@ -33,7 +33,7 @@ sh plugins/octopus-boot/build.sh           # 组装章鱼插件到 plugins/octop
 |---|---|
 | 预设主题 | `plugins/preset-themes/` → `plugins/mcode-preset-themes/` |
 | 章鱼开机 | `plugins/octopus-boot/dist/mcode-octopus-boot/`（先运行 build.sh） |
-| DSH 转换器 | `plugins/dsh-skin-import/` → `plugins/dsh-skin-import/` |
+| DSH 转换器 | `plugins/dsh-plugin-convert/` → `plugins/dsh-plugin-convert/` |
 
 安装不会自动换外观。打开插件详情页的插件设置区，自己点主题的「应用」、壁纸的「用作壁纸」、开机画面的「用作开机画面」。
 

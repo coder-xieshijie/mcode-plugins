@@ -7,7 +7,7 @@
 // OKLab distance of at least 0.1 in dark mode and 0.045 in light mode, so code blocks keep an edge.
 // Usage: node scripts/check-contrast.mjs <appearance.json>...
 import { readFileSync } from 'node:fs';
-import { CODE_SURFACE_MIN_DELTA, contrastReport } from '../plugins/dsh-skin-import/scripts/lib/derive.mjs';
+import { CODE_SURFACE_MIN_DELTA, contrastReport } from '../plugins/dsh-plugin-convert/scripts/lib/derive.mjs';
 
 const LIMITS = { primary: 4.5, secondary: 4.5, tertiary: 3, accent: 4.5, inverted: 4.5, code: 4.5 };
 const files = process.argv.slice(2);

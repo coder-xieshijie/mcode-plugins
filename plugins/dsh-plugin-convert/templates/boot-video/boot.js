@@ -1,4 +1,4 @@
-// MCode 开机视频播放页（MIT，由 dsh-skin-import 生成，与 mcode-octopus-boot 同一套逻辑）。
+// MCode 开机视频播放页（MIT，由 dsh-plugin-convert 生成，与 mcode-octopus-boot 同一套逻辑）。
 // 只通过 window.mcodeAppearance 与 MCode 通信。
 // 开机画面层没有底色：页面把自己淡到透明再调用 dismiss()，就是溶解进已经渲染好的主界面。
 (function () {
