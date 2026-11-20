@@ -37,6 +37,8 @@ sh plugins/octopus-boot/build.sh           # 组装章鱼插件到 plugins/octop
 
 安装不会自动换外观。打开插件详情页的插件设置区，自己点主题的「应用」、壁纸的「用作壁纸」、开机画面的「用作开机画面」。
 
+发到官方市场（`minimax-plugin-marketplace` 仓的 `plugins/<名>/`）时，提交的是 `build.sh` 的产物 `dist/mcode-octopus-boot/`，不是 `package/` 模板：模板不含 `pages/boot/media/`，照模板拷会让开机页引用不到 `poster.jpg`、`boot.mp4`、`end.jpg`，播放时静默失败。市场那份的 `author` 写 `MiniMax Code`，本仓保留个人署名，属有意差异。
+
 ## 校验
 
 除了本仓库的自检，插件也可以用 MCode 本地运行时的插件读取器校验：读取器输出插件的外观贡献与诊断，零诊断即通过。
