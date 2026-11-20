@@ -293,7 +293,15 @@ export function convert(analysis, { root, outDir, allow = new Set(), name } = {}
     report.licenseFiles.push({ from: src.slice(root.length + 1), to: target });
   }
   const first = themes[0]?.preview;
-  writeFileSync(join(dir, 'icon.png'), swatchIcon(first ? [first.canvas, first.surface, first.accent, first.text] : ['#1b1d24', '#3a7bff', '#7fd8ff', '#e8f1f8']));
+  // A character pack ships its own thumbnail; a colour swatch is only the fallback.
+  const thumbnail = petPack?.thumbnail;
+  // A pack's thumbnail may be the whole atlas: an icon has to be small, so only take a real one.
+  const thumbnailIsIcon = Boolean(thumbnail?.path) && /\.png$/iu.test(thumbnail.path) && pngSize(thumbnail.path).every((n) => n > 0 && n <= 512);
+  if (thumbnailIsIcon && statSync(thumbnail.path).size <= FILE_LIMIT) {
+    copyFileSync(thumbnail.path, join(dir, 'icon.png'));
+  } else {
+    writeFileSync(join(dir, 'icon.png'), swatchIcon(first ? [first.canvas, first.surface, first.accent, first.text] : ['#1b1d24', '#3a7bff', '#7fd8ff', '#e8f1f8']));
+  }
   const author = typeof analysis.pkg.author === 'string' ? analysis.pkg.author : 'dsh-plugin-convert';
   const version = /^\d+\.\d+\.\d+(?:-[\w.]+)?$/u.test(analysis.pkg.version) ? analysis.pkg.version : '0.1.0';
   const manifest = {
@@ -358,6 +366,15 @@ export function coverageTable({ themes, fonts, wallpapers, pages, settings, boot
  * draw a frame sequence, so the atlases are copied as they are and the page draws the rectangles;
  * nothing is cropped or re-encoded here. The pack's action tags drive MCode's session states.
  */
+/** Pixel size from a PNG IHDR, or [0, 0] when it is not a PNG we can read. */
+function pngSize(path) {
+  try {
+    const head = readFileSync(path).subarray(0, 24);
+    if (head[0] !== 0x89 || head[1] !== 0x50) return [0, 0];
+    return [head.readUInt32BE(16), head.readUInt32BE(20)];
+  } catch { return [0, 0]; }
+}
+
 /** A source-relative path, so the report reads "examples/x/pet.json" instead of a temp path. */
 function sourcePath(root, path) {
   if (!root || !path.startsWith(root)) return path;
