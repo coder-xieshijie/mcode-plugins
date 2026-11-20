@@ -1,0 +1,16 @@
+{
+  "format": "dsh-pet",
+  "formatVersion": 1,
+  "id": "demo-bot",
+  "name": "演示机器人",
+  "version": "1.0.0",
+  "author": "Fixture Author",
+  "description": "两帧的演示角色，用来说明 dsh-pet 包怎么转成桌宠页。",
+  "canvas": { "width": 32, "height": 32 },
+  "assets": { "main": { "path": "assets/atlas.png", "width": 64, "height": 32 } },
+  "thumbnail": "assets/thumb.png",
+  "animations": "animations.json",
+  "fallbacks": { "idle": "bot:idle", "working": "bot:work", "attention": "bot:wait", "success": "bot:done", "error": "bot:error" },
+  "dialogue": "dialogue.json",
+  "capabilities": ["sign"]
+}

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -124,4 +124,50 @@ test('only a host-bound package is refused; the rest converts what it can and re
   assert.match(a.unsupported, /Wallpaper Engine/u);
   const b = analyzePackage(fx('pet-character'));
   assert.equal(b.hostBound, undefined);
+});
+
+test('a dsh-pet pack becomes a pet page whose animations follow the session states', () => {
+  const root = fx('pet-pack');
+  const a = analyzePackage(root);
+  assert.equal(a.petPacks.length, 1);
+  assert.deepEqual(Object.keys(a.petPacks[0].roles).sort(), ['attention', 'error', 'greeting', 'idle', 'success', 'working'].filter((r) => r !== 'greeting'));
+  const r = convert(a, { root, outDir: out() });
+  assert.deepEqual(r.errors, []);
+  const d = decl(r);
+  assert.deepEqual(d.pages, [{ slot: 'pet', entry: 'pages/pet/index.html', label: '桌宠（demo-pet-pack）' }]);
+  // 帧的 asset 必须是图集 key，页面用它去查已加载的图
+  const page = readFileSync(join(r.dir, 'pages/pet/pet.js'), 'utf8');
+  const data = JSON.parse(page.slice(page.indexOf('var DATA = ') + 'var DATA = '.length, page.indexOf(';\n  var canvas')));
+  assert.deepEqual(data.roles, { idle: 'bot:idle', working: 'bot:work', attention: 'bot:wait', success: 'bot:done', error: 'bot:error' });
+  assert.deepEqual(Object.keys(data.assets), ['main']);
+  for (const animation of Object.values(data.animations)) {
+    for (const frame of animation.frames) assert.ok(data.assets[frame.asset], 'frame asset key must resolve: ' + frame.asset);
+  }
+  assert.equal(r.pet.frames, 6);
+  // 台词、牌面、力度选择都进丢失项
+  assert.ok(r.lost.some((x) => x.includes('气泡')));
+  assert.ok(r.lost.some((x) => x.includes('牌面')));
+});
+
+test('character art without a stated licence waits for consent like any other artwork', () => {
+  const root = fx('pet-pack');
+  const a = analyzePackage(root);
+  // 去掉授权文件后，角色图变成“许可未确认”
+  const copy = (() => {
+    const dir = mkdtempSync(join(tmpdir(), 'dsh-pet-license-'));
+    cpSync(root, dir, { recursive: true });
+    rmSync(join(dir, 'assets/LICENSE-ARTWORK'));
+    return dir;
+  })();
+  const b = analyzePackage(copy);
+  const blocked = convert(b, { root: copy, outDir: out() });
+  assert.equal(blocked.pet.skipped, 'license');
+  assert.equal(blocked.pending.length, 1);
+  assert.equal(blocked.pending[0].id, 'demo-bot');
+  assert.match(blocked.pending[0].reason, /作者与授权/u);
+  // 用户确认后（--allow <角色包 id>）才打包
+  const allowed = convert(b, { root: copy, outDir: out(), allow: new Set(['demo-bot']) });
+  assert.deepEqual(allowed.errors, []);
+  assert.equal(decl(allowed).pages[0].slot, 'pet');
+  assert.ok(existsSync(join(allowed.dir, 'pages/pet/media/main.png')));
 });

@@ -32,6 +32,7 @@ node "SKILL_DIR/../../scripts/dsh-import.mjs" <来源> --out <临时输出目录
 - 识别可静态解析的格式：`ctx.theme.register` 的字面量 token 表（如 dream-skin 内置皮肤、catppuccin 风味）、dream-skin 主题包、skin-center 清单 v2、带 palette 属性的 CSS 变量块（如 claude-style 的配色卡片）、opencode `theme.json`、PALETTE 色板字面量（如 bloom）。
 - 把 `var()`、`color-mix()`、`oklch()`、`rgba()`、`calc()` 按 DSH 默认色阶求值成 `#rrggbbaa`，按映射表对应到 MCode 的 47 个颜色 token 和 9 个代码 token，缺的按规则推算，并把正文对比度调到 ≥ 4.5:1。
 - 包内字体文件和内联字体转成 `fonts`；背景图片、视频转成 `wallpapers`；开机视频套标准开机页（进度条、就绪、片尾溶解进主界面、点击跳过）。
+- `dsh-pet` 1.0 角色包（`pet.json` + `animations.json` + 图集）：图集原样放进 `pages/pet/media/`，页面按帧表（rect + durationMs）播放，按包里的 tags 把 idle / working / attention / success / error / greeting 接到会话状态上。同一包里有多个角色包时用最全的那个，其余进「其他没收录的」。
 - 立绘 / 角色素材（文件名含 pet、mascot、character、live2d、立绘这类词）套标准桌宠页 `pages/pet`：点一下显示会话状态，双击开主窗口，右键有「打开主窗口 / 插件设置 / 去处理某个会话」，可以拖动，透明区域点击穿透。
 - 生成的页面会推导出自己的插件设置项（开机页的开关、桌宠的开关）。
 - 报告里有一张「对外观扩展点逐项对照」表，主题、字体、壁纸、开机画面、桌宠、设置、manifest 字段各占一行，写清产出、来源和说明——这是「这个插件能转什么」的正面回答；再后面才是「丢掉的」。

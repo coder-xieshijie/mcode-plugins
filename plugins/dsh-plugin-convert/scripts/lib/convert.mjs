@@ -6,6 +6,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync,
 import { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deriveMode } from './derive.mjs';
+import { mediaLicense } from './license.mjs';
 import { DSH_DEFAULTS, glowColors, groupLost, mapDshMode } from './mapping.mjs';
 import { swatchIcon } from './png.mjs';
 import { validatePlugin } from './validate.mjs';
@@ -13,6 +14,7 @@ import { validatePlugin } from './validate.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TEMPLATE = join(HERE, '../../templates/boot-video');
 const PET_TEMPLATE = join(HERE, '../../templates/pet-character');
+const PET_FRAMES_TEMPLATE = join(HERE, '../../templates/pet-frames');
 const MiB = 1024 * 1024;
 const FILE_LIMIT = 16 * MiB; // MiniMax Plugin V1 per-file limit (stricter than appearance's 50 MB)
 const TOTAL_BUDGET = 60 * MiB;
@@ -169,12 +171,19 @@ export function convert(analysis, { root, outDir, allow = new Set(), name } = {}
   }
   if (fonts.length) decl.fonts = fonts;
 
-  // Media.
-  const ffmpeg = hasFfmpeg();
-  const wallpapers = [];
+  // A DSH Pet Pack is a whole character with its own action table: it wins over loose artwork.
   const pages = [];
   let bootSettings = [];
   let petSettings = [];
+  const petPack = analysis.petPacks?.[0] ?? null;
+  if (petPack) convertPetPack(petPack, { root, dir, pages, budgetAdd: (n) => { budget += n; }, report, analysis, allowed, keepLicense });
+  if (analysis.petPacks?.length > 1) {
+    report.excluded.push({ kind: '角色包', id: analysis.petPacks.slice(1).map((p) => p.id).join(', '), reason: '一个插件只有一个桌宠页，已用 ' + petPack.id });
+  }
+
+  // Media.
+  const ffmpeg = hasFfmpeg();
+  const wallpapers = [];
   for (const media of analysis.media) {
     const ok = media.license.status === 'ok' || allowed(media.id);
     if (!ok) {
@@ -259,11 +268,13 @@ export function convert(analysis, { root, outDir, allow = new Set(), name } = {}
     report.wallpapers.push({ id, kind: media.kind, file: media.rel, license: media.license.status === 'ok' ? media.license.license : '用户确认后打包' });
   }
   if (wallpapers.length) decl.wallpapers = wallpapers;
+  if (report.petSettings) petSettings = report.petSettings;
   if (pages.length) decl.pages = pages;
   const settings = [...bootSettings, ...petSettings];
   if (settings.length) decl.settings = settings;
 
   report.coverage = coverageTable({ themes, fonts, wallpapers, pages, settings, boot: report.boot, pet: report.pet, analysis, styleOnly: styleOnlyCount(root) });
+  if (petPack?.lost?.length) report.lost.push(...petPack.lost);
   if (analysis.hostBound?.length) report.lost.push(...analysis.hostBound);
   report.lost.push(...featureLosses(root));
   const empty = !decl.themes && !decl.fonts && !decl.pages && !decl.wallpapers;
@@ -331,13 +342,118 @@ export function coverageTable({ themes, fonts, wallpapers, pages, settings, boot
     { point: 'fonts', host: '字体（UI / 代码）', result: fonts.length ? `${fonts.length} 款` : '未生成', source: analysis.fonts.length ? `${analysis.fonts.length} 款字体` : '无', note: fonts.length ? '随包字体需要许可；本机已装的字体不需要转换，去插件设置区直接选' : '' },
     { point: 'wallpapers', host: '壁纸（图片 / 静音循环视频）', result: wallpapers.length ? `${wallpapers.length} 张` : '未生成', source: analysis.media.filter((m) => m.role === 'wallpaper').length ? `${analysis.media.filter((m) => m.role === 'wallpaper').length} 个背景素材` : '无', note: wallpapers.length ? '视频壁纸会自动截封面图' : '' },
     { point: 'pages.boot', host: '开机画面（pages/boot）', result: boot ? '已生成' : '未生成', source: boot ? boot.file : analysis.media.some((m) => m.role === 'boot') ? '有开机视频但被排除' : '无', note: boot ? '套标准开机页：进度条、就绪后片尾溶解进主界面、点击跳过、Esc 跳过' : '' },
-    { point: 'pages.pet', host: '桌宠（pages/pet）', result: pet ? '已生成' : '未生成', source: pet ? pet.file : '无', note: pet ? '立绘素材做成桌宠页：会话状态、双击开主窗口、右键菜单、拖动' : '源插件里没有立绘 / 角色素材' },
+    { point: 'pages.pet', host: '桌宠（pages/pet）', result: pet && !pet.skipped ? '已生成' : '未生成', source: pet ? pet.file : '无', note: pet?.skipped === 'license' ? '角色素材许可未确认，等你同意后再转换' : pet ? '立绘素材做成桌宠页：会话状态、双击开主窗口、右键菜单、拖动' : '源插件里没有立绘 / 角色素材' },
     { point: 'settings', host: '插件设置项', result: settings.length ? `${settings.length} 项` : '未生成', source: settings.length ? '由生成的页面推导' : '无', note: settings.length ? '只覆盖转换出来的页面自己的开关' : '' },
     { point: 'appearance', host: 'manifest 的 appearance 字段', result: '已写入', source: '—', note: '取值固定为 appearance/appearance.json' },
   ];
   if (styleOnly) rows.push({ point: 'css / dom', host: '任意 CSS 与 DOM 改写', result: '无对应扩展点', source: `${styleOnly} 处`, note: 'MCode 不开放任意 CSS 与 DOM 改写，这部分只能在开机页 / 桌宠页里重画' });
   // An empty cell reads as "not looked at"; every row states its own answer.
   return rows.map((row) => ({ ...row, source: row.source || '无', note: row.note || '—' }));
+}
+
+/**
+ * Port a DSH Pet Pack 1.0 character into an MCode desktop pet page.
+ *
+ * The pack ships atlas sheets plus a frame table (rect + duration per frame). MCode's pet page can
+ * draw a frame sequence, so the atlases are copied as they are and the page draws the rectangles;
+ * nothing is cropped or re-encoded here. The pack's action tags drive MCode's session states.
+ */
+/** A source-relative path, so the report reads "examples/x/pet.json" instead of a temp path. */
+function sourcePath(root, path) {
+  if (!root || !path.startsWith(root)) return path;
+  return path.slice(root.length + 1) || path;
+}
+
+export function convertPetPack(pack, { root, dir, pages, report, analysis, allowed, keepLicense, budgetAdd }) {
+  // Character art is artwork: the code licence never covers it, so each atlas goes through the same
+  // gate as wallpapers and fonts. One pack is one artwork, so the user consents once with --allow <id>.
+  const licenses = pack.usedAssets.map((key) => ({ key, license: mediaLicense({ root, file: pack.assets[key].path, manifestLicense: analysis.pkg.license }) }));
+  const restricted = licenses.filter((x) => x.license.status !== 'ok');
+  if (restricted.length && !allowed(pack.id)) {
+    report.pending.push({
+      kind: '角色素材',
+      id: pack.id,
+      name: pack.rel,
+      status: restricted[0].license.status,
+      reason: restricted[0].license.reason,
+    });
+    report.pet = { id: pack.id, name: pack.name, file: sourcePath(root, pack.manifestPath), kind: 'pack', skipped: 'license' };
+    return report.pet;
+  }
+  for (const key of pack.usedAssets) {
+    if (licenses.find((x) => x.key === key)?.license.evidence) keepLicense(join(root, licenses.find((x) => x.key === key).license.evidence));
+  }
+  const pageDir = join(dir, 'pages/pet');
+  mkdirSync(join(pageDir, 'media'), { recursive: true });
+  const assetPaths = {};
+  let total = 0;
+  for (const key of pack.usedAssets) {
+    const asset = pack.assets[key];
+    const size = statSync(asset.path).size;
+    if (size > FILE_LIMIT) {
+      report.excluded.push({ kind: '角色图集', id: key, reason: `${(size / MiB).toFixed(1)} MB，超过插件包单文件 16 MiB 上限` });
+      continue;
+    }
+    if (total + size > TOTAL_BUDGET) {
+      report.excluded.push({ kind: '角色图集', id: key, reason: '插件包总体积会超过 64 MiB' });
+      continue;
+    }
+    const ext = extname(asset.path).toLowerCase();
+    const file = 'media/' + safeFile(key) + ext;
+    copyFileSync(asset.path, join(pageDir, file));
+    assetPaths[key] = file;
+    total += size;
+    budgetAdd(size);
+  }
+  // Frames on an atlas that did not fit are dropped with their animation, not left dangling.
+  const animations = {};
+  const roles = {};
+  const dropped = new Set();
+  for (const item of pack.animations) {
+    // Frames keep the asset key; DATA.assets maps it to the copied file. Both must agree.
+    const frames = item.frames.filter((frame) => assetPaths[frame.asset]).map((frame) => ({ asset: frame.asset, rect: frame.rect, ms: frame.ms }));
+    if (frames.length !== item.frames.length) dropped.add(item.id);
+    if (!frames.length) continue;
+    animations[item.id] = { label: item.label, loop: item.loop, frames };
+  }
+  for (const [role, id] of Object.entries(pack.roles)) if (animations[id]) roles[role] = id;
+  if (dropped.size) report.excluded.push({ kind: '角色动作', id: [...dropped].join(', '), reason: '部分图集被包体积上限排除，对应动作没有完整帧' });
+
+  const data = {
+    name: cut(pack.name || analysis.pkg.name, 60),
+    canvas: pack.canvas,
+    assets: assetPaths,
+    animations,
+    roles,
+  };
+  const html = readFileSync(join(PET_FRAMES_TEMPLATE, 'index.html'), 'utf8')
+    .replace('{{TITLE}}', cut('桌宠（' + analysis.pkg.name + '）', 80))
+    .replace('{{CW}}', String(pack.canvas.width))
+    .replace('{{CH}}', String(pack.canvas.height));
+  writeFileSync(join(pageDir, 'index.html'), html);
+  copyFileSync(join(PET_FRAMES_TEMPLATE, 'pet.css'), join(pageDir, 'pet.css'));
+  writeFileSync(join(pageDir, 'pet.js'), readFileSync(join(PET_FRAMES_TEMPLATE, 'pet.js'), 'utf8').replace('{{DATA}}', JSON.stringify(data)));
+
+  pages.push({ slot: 'pet', entry: 'pages/pet/index.html', label: '桌宠（' + analysis.pkg.name + '）' });
+  report.pet = {
+    id: pack.id,
+    name: pack.name,
+    file: sourcePath(root, pack.manifestPath),
+    kind: 'pack',
+    canvas: pack.canvas,
+    animations: Object.keys(animations).length,
+    frames: Object.values(animations).reduce((n, a) => n + a.frames.length, 0),
+    roles: Object.keys(roles),
+    assets: Object.keys(assetPaths).length,
+    bytes: total,
+    license: restricted.length ? '用户确认后打包' : '源包明确授权',
+  };
+  report.petSettings = [
+    { key: 'open-on-double-click', label: '双击打开主窗口', type: 'boolean', default: true },
+    { key: 'show-count', label: '显示会话状态', description: '有待处理、运行中或出错的会话时，在角色下方显示数量。', type: 'boolean', default: true },
+    { key: 'idle-animation', label: '待机动画', type: 'boolean', default: true },
+  ];
+  return report.pet;
 }
 
 export function conversionMarkdown(report, analysis) {
@@ -368,7 +484,7 @@ export function conversionMarkdown(report, analysis) {
     lines.push('');
   }
   if (report.boot) lines.push(`开机动画：${report.boot.file}，套用标准开机页（进度条、就绪后片尾溶解进主界面、点击跳过）；许可：${report.boot.license}。`, '');
-  if (report.pet) lines.push(`桌宠：${report.pet.file}（${report.pet.kind === 'video' ? '循环视频' : '静态立绘'}），套用标准桌宠页（会话状态、双击开主窗口、右键菜单、拖动）；许可：${report.pet.license}。`, '');
+  if (report.pet) lines.push(`桌宠：${report.pet.kind === 'pack' ? `DSH 角色包 ${report.pet.name}（${report.pet.file}），${report.pet.animations} 组动作 / ${report.pet.frames} 帧 / ${report.pet.assets} 张图集` : report.pet.file}，套用标准桌宠页（跟着会话状态切动作、双击开主窗口、右键菜单、拖动）；许可：${report.pet.license}。`, '');
   if (report.coverage) {
     lines.push('## 对外观扩展点逐项对照', '', '| 扩展点 | 产出 | 源 | 说明 |', '|---|---|---|---|');
     for (const row of report.coverage) lines.push(`| ${row.host} | ${row.result} | ${row.source} | ${row.note} |`);

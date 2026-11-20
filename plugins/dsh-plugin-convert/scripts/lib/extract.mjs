@@ -6,6 +6,7 @@ import { extractBlocks, extractFontFaces, resolveVariants } from './css.mjs';
 import { fontLicense, mediaLicense } from './license.mjs';
 import { glowColors } from './mapping.mjs';
 import { parseColor, toHex } from './color.mjs';
+import { findPetPacks } from './pet-pack.mjs';
 
 const TEXT_EXT = new Set(['.js', '.mjs', '.cjs', '.ts', '.css', '.json', '.md', '.txt', '.yml', '.yaml']);
 const CODE_EXT = new Set(['.js', '.mjs', '.cjs', '.ts']);
@@ -59,6 +60,12 @@ export function analyzePackage(root, options = {}) {
   }
   for (const [re, reason] of HOST_BOUND) {
     if (re.test(info.name) || re.test(basename(root))) { result.hostBound = [...(result.hostBound ?? []), reason]; }
+  }
+  // DSH Pet Pack 1.0: the pack itself is the appearance contribution (atlas frames + action table).
+  const petPacks = findPetPacks(root);
+  if (petPacks.length) {
+    result.petPacks = petPacks;
+    result.formats.push('DSH Pet Pack（' + petPacks.map((p) => p.name).join('、') + '）');
   }
   const files = walk(root);
   const textIndex = files
@@ -295,8 +302,8 @@ export function analyzePackage(root, options = {}) {
     const labels = [roles.has('boot') && '开机视频', roles.has('pet') && '桌宠立绘', roles.has('wallpaper') && '背景'].filter(Boolean);
     result.formats.push('素材（' + labels.join(' / ') + '）');
   }
-  if (!result.themes.length && !result.fonts.length && !result.media.length) {
-    result.unsupported = '没有找到可以静态解析的配色、字体或素材：可能主题是运行时计算出来的，或者插件只做 DOM 改写与功能。';
+  if (!result.themes.length && !result.fonts.length && !result.media.length && !result.petPacks?.length) {
+    result.unsupported = '没有找到可以静态解析的配色、字体、素材或 DSH 角色包：可能主题是运行时计算出来的，或者插件只做 DOM 改写与功能。';
   }
   return result;
 }

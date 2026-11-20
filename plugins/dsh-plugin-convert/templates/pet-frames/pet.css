@@ -1,0 +1,45 @@
+/*
+ * 桌宠窗口是透明、无边框、始终置顶的小窗。页面里只有角色那一块接收鼠标事件，其余交给
+ * setClickThrough，让点击落到桌面上而不是停在透明色块上。
+ */
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+#stage {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: auto;
+  cursor: pointer;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.26));
+}
+#tip {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(20, 22, 28, 0.74);
+  color: #f2f5f8;
+  font: 11px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  pointer-events: none;
+}
+#tip.show {
+  opacity: 1;
+}

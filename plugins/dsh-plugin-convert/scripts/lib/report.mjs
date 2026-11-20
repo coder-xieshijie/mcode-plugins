@@ -21,7 +21,7 @@ export function renderReport(r) {
     if (r.fonts.length) out.push(`- 字体 ${r.fonts.length} 款：${r.fonts.map((f) => `${f.family}（${f.license}）`).join('、')}`);
     if (r.wallpapers.length) out.push(`- 壁纸 ${r.wallpapers.length} 张：${r.wallpapers.map((w) => w.id).join('、')}`);
     if (r.boot) out.push(`- 开机动画：${r.boot.file}（标准开机页，片尾溶解进界面）`);
-    if (r.pet) out.push(`- 桌宠：${r.pet.file}（${r.pet.kind === 'video' ? '循环视频' : '静态立绘'}；点一下看会话状态，双击开主窗口，右键有菜单）`);
+    if (r.pet) out.push(`- 桌宠：${r.pet.kind === 'pack' ? `角色包 ${r.pet.name}（${r.pet.file}），${r.pet.animations} 组动作 / ${r.pet.frames} 帧，跟着会话状态切换：${r.pet.roles.join('、')}` : `${r.pet.file}（${r.pet.kind === 'video' ? '循环视频' : '静态立绘'}）`}；点一下看会话状态，双击开主窗口，右键有菜单`);
     out.push('');
   }
   out.push('### 丢掉的', '');

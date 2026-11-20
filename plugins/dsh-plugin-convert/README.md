@@ -22,6 +22,7 @@
 | 字体文件、`@font-face` 内联 data URI | claude-style、opencode-palette | `fonts`（带 `files`） |
 | 开机视频、背景图片 / 视频 | video-skin | 标准开机页、`wallpapers` |
 | 立绘 / 角色素材（`pet`、`mascot`、`character`、`live2d`、`立绘` 等命名） | dream-skin 的角色图 | 标准桌宠页 `pages/pet`：点一下看会话状态、双击开主窗口、右键菜单、可拖动 |
+| `dsh-pet` 1.0 角色包（`pet.json` + `animations.json` + 图集按 rect 切帧） | dsh-bigfish 的角色包 | 标准桌宠页 `pages/pet`：图集原样打包，页面按帧表播放，idle/working/attention/success/error/greeting 跟着会话状态切换 |
 
 颜色值里的 `var()`、`color-mix()`、`oklch()`、`oklab()`、`hsl()`、`rgba()`、`calc()` 按 DSH 默认色阶（`scripts/lib/dsh-defaults.json`）求值成 `#rrggbbaa`；DSH `--dsw-*` 到 MCode token 的对应表在 `scripts/lib/mapping.mjs`，缺的 token 由 `scripts/lib/derive.mjs` 按规则推算，并保证正文对比度 ≥ 4.5:1。
 

@@ -1,0 +1,12 @@
+[
+  { "id": "bot:idle", "label": "待机", "tags": ["idle"], "intensity": 0, "loop": true, "weight": 1, "cooldownMs": 4000,
+    "frames": [ { "asset": "main", "rect": [0, 0, 32, 32], "durationMs": 400 }, { "asset": "main", "rect": [32, 0, 32, 32], "durationMs": 400 } ] },
+  { "id": "bot:work", "label": "干活", "tags": ["working"], "intensity": 0, "loop": true, "weight": 1, "cooldownMs": 4000,
+    "frames": [ { "asset": "main", "rect": [32, 0, 32, 32], "durationMs": 300 } ] },
+  { "id": "bot:wait", "label": "等你", "tags": ["attention"], "intensity": 0, "loop": true, "weight": 1, "cooldownMs": 4000,
+    "frames": [ { "asset": "main", "rect": [0, 0, 32, 32], "durationMs": 300 } ] },
+  { "id": "bot:done", "label": "完成", "tags": ["success"], "intensity": 0, "loop": false, "weight": 1, "cooldownMs": 4000,
+    "frames": [ { "asset": "main", "rect": [0, 0, 32, 32], "durationMs": 300 } ] },
+  { "id": "bot:error", "label": "出错", "tags": ["error"], "intensity": 0, "loop": true, "weight": 1, "cooldownMs": 4000,
+    "frames": [ { "asset": "main", "rect": [32, 0, 32, 32], "durationMs": 300 } ] }
+]
