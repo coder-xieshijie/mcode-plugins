@@ -1,8 +1,8 @@
 # 素材许可：CC BY 4.0
 
-本目录的 `assets/`（开机视频 `boot.mp4`、关键帧）、`package/wallpapers/` 下的壁纸，以及构建时由关键帧生成的封面 `poster.jpg`、尾帧 `end.jpg`，来自“MCode 章鱼少女”角色资产仓，按 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.zh-hans) 授权。
+本目录的 `assets/`（开机视频 `boot.mp4`、关键帧）、`package/wallpapers/` 下的壁纸，以及构建时由关键帧生成的封面 `poster.jpg`、尾帧 `end.jpg`，来自本仓库 `octopus-girl/` 的“MCode 章鱼少女”角色素材，按 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.zh-hans) 授权。
 
-- 署名：MCode 章鱼少女 by coder-xieshijie（https://github.com/coder-xieshijie/mcode-octopus-girl）
+- 署名：MCode 章鱼少女 by coder-xieshijie（https://github.com/coder-xieshijie/mcode-plugins）
 - 许可：CC BY 4.0，https://creativecommons.org/licenses/by/4.0/
 - 改动：壁纸由 16:9 关键帧居中裁成 16:10、缩放到 1920×1200 并转为 WebP；封面与尾帧缩放到 1920 宽并转为 JPEG。视频未改动。
 

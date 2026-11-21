@@ -1,6 +1,6 @@
 # mcode-plugins
 
-MCode 外观插件合集。三个插件都是 MiniMax 格式的本地插件（`.minimax-plugin/plugin.json`），用 MCode 的插件外观扩展点交付主题、字体、壁纸、开机画面和桌宠。
+MCode 外观插件合集，附“MCode 章鱼少女”的角色素材。三个插件都是 MiniMax 格式的本地插件（`.minimax-plugin/plugin.json`），用 MCode 的插件外观扩展点交付主题、字体、壁纸、开机画面和桌宠。
 
 | 插件 | 目录 | 内容 |
 |---|---|---|
@@ -9,6 +9,10 @@ MCode 外观插件合集。三个插件都是 MiniMax 格式的本地插件（`.
 | `dsh-plugin-convert` DSH 插件转换器 | [plugins/dsh-plugin-convert](plugins/dsh-plugin-convert/) | 带 Skill：把 DeepSeek Harness 插件静态转换成 MCode 外观插件，能对应到外观扩展点的都转 |
 
 需要支持插件外观（主题、字体、壁纸、开机画面、桌宠）的 MCode 版本。只带外观的插件在旧版 MCode 上会因为“没有可用能力”而装不上。
+
+## 角色素材
+
+[octopus-girl/](octopus-girl/) 是“MCode 章鱼少女”的角色素材：设定图、刺青母版、启动动画和生成提示词，规则见该目录的 `AGENTS.md`。章鱼开机插件用的开机视频和三张关键帧出自这里，`plugins/octopus-boot/assets/` 里的是内容相同的副本。
 
 ## 构建
 
@@ -45,4 +49,4 @@ sh plugins/octopus-boot/build.sh           # 组装章鱼插件到 plugins/octop
 
 ## 许可
 
-代码 MIT（`LICENSE`）。预设主题的色板出处、章鱼少女素材（CC BY 4.0）与 DSH 默认色阶（MIT）的来源见 [NOTICE.md](NOTICE.md)。
+代码 MIT（`LICENSE`）。预设主题的色板出处、章鱼少女素材（CC BY 4.0）与 DSH 默认色阶（MIT）的来源见 [NOTICE.md](NOTICE.md)。`octopus-girl/` 下的角色设定、美术和提示词按 CC BY 4.0，见 [octopus-girl/LICENSE-ARTWORK.md](octopus-girl/LICENSE-ARTWORK.md)。

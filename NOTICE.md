@@ -20,7 +20,7 @@
 
 ## 章鱼少女素材（plugins/octopus-boot）
 
-开机视频、关键帧和壁纸来自“MCode 章鱼少女”（https://github.com/coder-xieshijie/mcode-octopus-girl），按 CC BY 4.0 授权，署名“MCode 章鱼少女 by coder-xieshijie”；改动与例外见 `plugins/octopus-boot/LICENSE-ARTWORK.md`。“MiniMax”“MCode”名称与 MCode 章鱼图标不在许可内。本项目是个人非官方作品。
+开机视频、关键帧和壁纸来自本仓库 `octopus-girl/` 的“MCode 章鱼少女”角色素材，按 CC BY 4.0 授权，署名“MCode 章鱼少女 by coder-xieshijie”；改动与例外见 `plugins/octopus-boot/LICENSE-ARTWORK.md`。“MiniMax”“MCode”名称与 MCode 章鱼图标不在许可内。本项目是个人非官方作品。
 
 ## DSH 默认色阶（plugins/dsh-plugin-convert）
 

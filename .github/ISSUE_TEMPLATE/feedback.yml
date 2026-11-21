@@ -1,0 +1,11 @@
+name: 反馈与建议
+description: 指出错误、提建议，或者反馈侵权问题
+title: "[反馈] "
+labels: [feedback]
+body:
+  - type: textarea
+    id: content
+    attributes:
+      label: 内容
+    validations:
+      required: true

@@ -1,0 +1,37 @@
+name: 分享二创作品
+description: 分享你画的、做的章鱼少女作品
+title: "[作品] "
+labels: [artwork]
+body:
+  - type: textarea
+    id: artwork
+    attributes:
+      label: 作品
+      description: 请直接上传图片或视频附件，不要只贴聊天分享链接。
+    validations:
+      required: true
+  - type: input
+    id: author
+    attributes:
+      label: 作者署名
+      description: 收录时署这个名字；转载请填原作者，不知道就写“未知”。
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: 原始链接（可选）
+  - type: dropdown
+    id: method
+    attributes:
+      label: 创作方式
+      options: [手绘, AI 生成, AI 辅助 + 手工修改, 其他]
+    validations:
+      required: true
+  - type: checkboxes
+    id: license
+    attributes:
+      label: 授权
+      options:
+        - label: 我同意作品按 CC BY 4.0 收录进本仓库
+          required: true
