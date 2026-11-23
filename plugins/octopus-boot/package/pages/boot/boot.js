@@ -21,9 +21,26 @@
     return Number.isFinite(value) ? Math.min(3000, Math.max(200, value)) : 800;
   }
 
+  // 进度条取启动进度和视频播放进度中较慢的一个：视频没放到溶解点、MCode 没准备好，都不会走满；
+  // 开始溶解时走满。只跟启动进度走的话，MCode 准备好时视频可能还没过半，进度条却已经满了。
+  var startup = 0;
+
+  function playback() {
+    if (finished || leaving) return 1;
+    if (!clip.duration) return 0;
+    var end = settings.ending === 'after' ? clip.duration : clip.duration - fadeMs() / 1000;
+    return end > 0 ? Math.min(1, clip.currentTime / end) : 1;
+  }
+
+  function renderProgress() {
+    var value = leaving ? 1 : Math.min(startup, playback());
+    bar.style.width = Math.round(value * 100) + '%';
+  }
+
   function leave() {
     if (leaving) return;
     leaving = true;
+    renderProgress();
     var ms = reducedMotion ? 0 : fadeMs();
     document.body.style.setProperty('--fade-ms', ms + 'ms');
     document.body.classList.add('leaving');
@@ -48,6 +65,7 @@
   function finishVideo() {
     if (finished) return;
     finished = true;
+    renderProgress();
     maybeLeave();
   }
 
@@ -72,6 +90,7 @@
       finishVideo();
     });
     clip.addEventListener('timeupdate', function () {
+      renderProgress();
       // 'dissolve'（默认，旧值 'crossfade' 同义）：片尾最后一段边播边溶解；'after'：放完再溶解
       if (settings.ending === 'after' || !ready || leaving || !clip.duration) return;
       if (clip.duration - clip.currentTime <= fadeMs() / 1000) {
@@ -121,17 +140,22 @@
   }
 
   host.onProgress(function (p) {
-    if (p && typeof p.value === 'number') bar.style.width = Math.round(p.value * 100) + '%';
+    if (p && typeof p.value === 'number') {
+      startup = Math.max(0, Math.min(1, p.value));
+      renderProgress();
+    }
   });
   host.onReady(function () {
     ready = true;
-    bar.style.width = '100%';
+    startup = 1;
+    renderProgress();
     maybeLeave();
   });
   document.addEventListener('click', function () {
     if (settings['click-to-skip'] === false) return;
     // 跳过也走溶解：准备好了就立刻淡出；没准备好就等就绪后淡出（Esc 由 MCode 处理）
     finished = true;
+    renderProgress();
     maybeLeave();
   });
 

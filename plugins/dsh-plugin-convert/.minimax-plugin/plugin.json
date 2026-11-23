@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "dsh-plugin-convert",
   "displayName": "DSH 插件转换器",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "把 DeepSeek Harness（DSH）的插件静态转换成 MCode 外观插件：主题配色、字体、壁纸、开机画面和桌宠，凡能对应到外观扩展点的都转，对不上的逐项说明，附拆解报告与许可检查。",
   "author": "coder-xieshijie",
   "icon": "icon.png",
