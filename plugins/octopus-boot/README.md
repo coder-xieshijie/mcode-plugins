@@ -2,13 +2,17 @@
 
 MCode 的开机画面插件：启动时铺满主窗口播放章鱼少女启动动画，底部细进度条跟随 MCode 的启动进度，片尾溶解进 MCode 主界面。附 3 张章鱼少女壁纸，在插件设置区「用作壁纸」。
 
-## 组装与安装
+## 安装
+
+`package/` 就是完整的插件目录，把它复制成 MCode 数据目录下的 `plugins/mcode-octopus-boot/` 即可，不需要额外构建：
 
 ```sh
-sh plugins/octopus-boot/build.sh        # 生成 plugins/octopus-boot/dist/mcode-octopus-boot
+cp -R plugins/octopus-boot/package ~/.minimax/plugins/mcode-octopus-boot
 ```
 
-把生成的 `mcode-octopus-boot` 目录放进 MCode 数据目录的 `plugins/` 下，MCode 会自动扫描并启用。打开插件详情页的“插件设置”：
+要打一份可发布的副本时用 `sh plugins/octopus-boot/build.sh`，它会输出到 `dist/mcode-octopus-boot`，并在本机有 `sips` 或 `ffmpeg` 时按 `assets/keyframes/` 刷新封面和尾帧；没有这两个工具时沿用包内已有的 `poster.jpg`、`end.jpg`。
+
+装好后打开插件详情页的“插件设置”：
 
 - 打开「用作开机画面」，下次启动 MCode 时生效；
 - 在想用的壁纸上点「用作壁纸」，模糊、暗化、阅读面不透明度在同一处调。
@@ -33,7 +37,7 @@ sh plugins/octopus-boot/build.sh        # 生成 plugins/octopus-boot/dist/mcode
 | 代码唤醒 | 开机动画第二个关键帧 | 8 / 40 / 88 |
 | 睁眼微笑 | 开机动画尾帧 | 10 / 30 / 88 |
 
-壁纸由 16:9 关键帧居中裁成 16:10（1920×1200 WebP），重新生成用 `sh plugins/octopus-boot/make-wallpapers.sh`。
+壁纸由 16:9 关键帧居中裁成 16:10（1920×1200 WebP），重新生成用 `sh plugins/octopus-boot/make-wallpapers.sh`。开机页本身用到的素材在 `package/pages/boot/media/`：`boot.mp4` 是成片，`poster.jpg`、`end.jpg` 是从 `assets/keyframes/` 缩出来的首帧和尾帧。
 
 ## 行为说明
 

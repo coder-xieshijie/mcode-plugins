@@ -12,7 +12,7 @@ MCode 外观插件合集，附“MCode 章鱼少女”的角色素材。三个�
 
 ## 角色素材
 
-[octopus-girl/](octopus-girl/) 是“MCode 章鱼少女”的角色素材：设定图、刺青母版、启动动画和生成提示词，规则见该目录的 `AGENTS.md`。章鱼开机插件用的开机视频和三张关键帧出自这里，`plugins/octopus-boot/assets/` 里的是内容相同的副本。
+[octopus-girl/](octopus-girl/) 是“MCode 章鱼少女”的角色素材：设定图、刺青母版、启动动画和生成提示词，规则见该目录的 `AGENTS.md`。章鱼开机插件用的开机视频和三张关键帧出自这里；插件包里 `plugins/octopus-boot/package/pages/boot/media/boot.mp4` 就是成片，三张关键帧母版在 `plugins/octopus-boot/assets/keyframes/`。
 
 ## 构建
 
@@ -22,11 +22,11 @@ MCode 外观插件合集，附“MCode 章鱼少女”的角色素材。三个�
 npm test                                   # 单测（node:test）：转换器、预设主题、章鱼插件声明
 node scripts/build-preset-themes.mjs       # 从 scripts/palettes.mjs 重新生成预设主题
 node scripts/check-contrast.mjs plugins/preset-themes/appearance/appearance.json
-sh plugins/octopus-boot/build.sh           # 组装章鱼插件到 plugins/octopus-boot/dist/mcode-octopus-boot（用 sips 或 ffmpeg 生成封面）
+sh plugins/octopus-boot/build.sh           # 打发布副本到 plugins/octopus-boot/dist/mcode-octopus-boot（有 sips 或 ffmpeg 时刷新封面和尾帧）
 ```
 
 - 预设主题：`plugins/preset-themes/` 本身就是可安装的插件目录，`appearance/appearance.json` 已生成入库。
-- 章鱼插件：源码在 `package/`，视频与关键帧在 `assets/`，`build.sh` 把两者组装成安装包；壁纸已裁好入库，换素材时用 `make-wallpapers.sh` 重做（需要 `cwebp`）。
+- 章鱼插件：`package/` 本身就是完整可安装的插件目录，成片和两张静帧都在 `package/pages/boot/media/`；关键帧母版在 `assets/`，`build.sh` 只用来生成发布副本。壁纸已裁好入库，换素材时用 `make-wallpapers.sh` 重做（需要 `cwebp`）。
 - DSH 转换器：`plugins/dsh-plugin-convert/` 就是插件目录；`scripts/build-dsh-defaults.mjs` 用于从 DeepSeek Harness 源码重新生成它的默认色阶表。
 
 ## 安装
@@ -36,12 +36,12 @@ sh plugins/octopus-boot/build.sh           # 组装章鱼插件到 plugins/octop
 | 插件 | 复制什么 |
 |---|---|
 | 预设主题 | `plugins/preset-themes/` → `plugins/mcode-preset-themes/` |
-| 章鱼开机 | `plugins/octopus-boot/dist/mcode-octopus-boot/`（先运行 build.sh） |
+| 章鱼开机 | `plugins/octopus-boot/package/` → `plugins/mcode-octopus-boot/` |
 | DSH 转换器 | `plugins/dsh-plugin-convert/` → `plugins/dsh-plugin-convert/` |
 
 安装不会自动换外观。打开插件详情页的插件设置区，自己点主题的「应用」、壁纸的「用作壁纸」、开机画面的「用作开机画面」。
 
-发到官方市场（`minimax-plugin-marketplace` 仓的 `plugins/<名>/`）时，提交的是 `build.sh` 的产物 `dist/mcode-octopus-boot/`，不是 `package/` 模板：模板不含 `pages/boot/media/`，照模板拷会让开机页引用不到 `poster.jpg`、`boot.mp4`、`end.jpg`，播放时静默失败。市场那份的 `author` 写 `MiniMax Code`，本仓保留个人署名，属有意差异。
+发到官方市场（`minimax-plugin-marketplace` 仓的 `plugins/<名>/`）时直接用 `package/`；`build.sh` 的产物与它一致，只多一次静帧刷新。两边的 `author` 都是 `coder-xieshijie`，包内容逐字相同。
 
 ## 校验
 
